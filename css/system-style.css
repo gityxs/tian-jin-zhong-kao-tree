@@ -1,6 +1,6 @@
 
 @font-face {
-	font-family: 'hanzipen';
+	font-family: 'Hanzipen SC';
 	src: url(hanzipen_sc_0.ttf);
 }
 * {
@@ -12,8 +12,6 @@
 	margin: auto;
 	-webkit-text-size-adjust: none;
 	text-size-adjust: none;
-
-	font-family: hanzipen;
 }
 
 *:focus {
