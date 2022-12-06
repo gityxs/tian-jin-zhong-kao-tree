@@ -171,9 +171,15 @@ var systemComponents = {
                 <td><button class="opt" onclick="toggleOpt('hideChallenges')">Completed Challenges: {{ options.hideChallenges?"HIDDEN":"SHOWN" }}</button></td>
                 <td><button class="opt" onclick="toggleOpt('forceOneTab'); needsCanvasUpdate = true">Single-Tab Mode: {{ options.forceOneTab?"ALWAYS":"AUTO" }}</button></td>
 				<td><button class="opt" onclick="toggleOpt('forceTooltips'); needsCanvasUpdate = true">Shift-Click to Toggle Tooltips: {{ options.forceTooltips?"ON":"OFF" }}</button></td>
-				<td><button class="opt" onclick="setBuyableAmount('Nf',12,getBuyableAmount('Nf',12).gte(1)? new Decimal(0) : new Decimal(1))">切换计数法</button></td>
-				</tr> 
+				
+			</tr>
+			<tr>
+			<td><button class="opt" onclick="">Place Holder</button></td>
+			<td><button class="opt" onclick="setBuyableAmount('Nf',12,getBuyableAmount('Nf',12).gte(1)? new Decimal(0) : new Decimal(1))">计数法：{{ getBuyableAmount('Nf',12).gte(1)?"科学计数法":"中文计数法" }}</button></td>
+			<td><button class="opt" onclick="">Place Holder</button></td>
+			</tr> 
         </table>`
+		
     },
 
     'back-button': {

@@ -35,7 +35,7 @@ addLayer("C", {
     readMult()
     {
         let mult = new Decimal(1)
-        if(getBuyableAmount("Exp",21).gte(1)) mult = mult.mul(buyableEffect("Exp",21))
+        if(getBuyableAmount("Exp",21).gte(1)||hasMilestone("E",9)) mult = mult.mul(buyableEffect("Exp",21))
         return mult
     },
     readingPointsMult()
@@ -515,21 +515,21 @@ return gain
             }
         },
         1: {
-            requirementDescription: "1000 语文知识(1)",
+            requirementDescription(){return format(new Decimal(1000))+" 语文知识(1)"},
             effectDescription: "每秒自动学习 1 次语文，禁用手动学习语文。同时改良“走一步，再走一步”的公式",
             done() {
                 return player.C.points.gte(1000)
             }
         },
         2: {
-            requirementDescription: "2e21无量大数 语文知识(2)",
+            requirementDescription(){return format(new Decimal(2e89))+" 语文知识(2)"},
             effectDescription: "在语文考试选项卡下解锁文言文阅读！同时解锁考试策略。",
             done() {
                 return player.C.points.gte(2e89)
             }
         },
         3: {
-            requirementDescription: "2e35无量大数 语文知识(3)",
+            requirementDescription(){return format(new Decimal(2e103))+" 语文知识(3)"},
             effectDescription: "“精读文言文”的基础增加10%（叠加）。同时语文知识软上限削弱3%。",
             done() {
                 return player.C.points.gte(2e103)
@@ -703,7 +703,7 @@ return hasMilestone("E",2)
         },
         7: {
             requirementDescription: "最佳中考分数达到 11 (7)",
-            effectDescription: "在经验选项卡下追加天赋转换器。可以将您的语文知识和学分转换成天赋点数！",
+            effectDescription: "在经验选项卡下追加天赋转换器。可以将您的经验点数转换为天赋点数！",
             done() {
                 return player.E.bestPoints.gte(11)
             },
@@ -713,7 +713,7 @@ return hasMilestone("E",2)
         },
         8: {
             requirementDescription: "最佳中考分数达到 13 (8)",
-            effectDescription: "所有天赋技能成本增长从指数改为线性。同时在语文选项卡下解锁脑洞精炼系统和阅读感悟升级。并且领悟",
+            effectDescription: "所有天赋技能成本增长从指数改为线性。同时在语文选项卡下解锁将好文精华转化为阅读感悟的能力和3个全新的阅读感悟技能。并且每次阅读有较小概率获得金句摘抄！",
             done() {
                 return player.E.bestPoints.gte(13)
             },
@@ -735,7 +735,7 @@ return hasMilestone("E",2)
             requirementDescription: "最佳中考分数达到 16 (10)",
             effectDescription: "恭喜目前版本毕业！",
             done() {
-                return player.E.bestPoints.gte(15)
+                return player.E.bestPoints.gte(16)
             },
             unlocked(){
                 return hasMilestone("E",9)
@@ -891,9 +891,9 @@ return hasMilestone("E",2)
     },
     chance(){
         if(!player.C.points.gte(1e30)) chs = new Decimal(0.001)
-        if(player.C.points.gte(1e35)&&!player.C.points.gte(1e40)) chs = Decimal(0.01)
-        if(player.C.points.gte(1e40)&&!player.C.points.gte(1e43)) chs = Decimal(0.1)
-        if(player.C.points.gte(1e43)&&!player.C.points.gte(1e50)) chs = Decimal(0.5)
+        if(player.C.points.gte(1e30)&&!player.C.points.gte(1e40)) chs = new Decimal(0.01)
+        if(player.C.points.gte(1e40)&&!player.C.points.gte(1e43)) chs = new Decimal(0.1)
+        if(player.C.points.gte(1e43)&&!player.C.points.gte(1e50)) chs = new Decimal(0.5)
         if(player.C.points.gte(1e50)) chs = player.C.points.log10().div(120).mul(100).min(100)
         if(getBuyableAmount("Nf",21).gte(1)) chs = chs.mul(0.7)
         if(getBuyableAmount("Nf",23).gte(1)) chs = chs.mul(1.3).min(100)
@@ -2071,7 +2071,7 @@ return hasMilestone("E",2)
     player.E.points = new Decimal(0)
     player.E.completedExam = new Decimal(0)
     player.E.freeze = new Decimal(360)
-    player.E.buyables = []
+    examReset()
     },
     buyMax() {
         // I'll do this later ehehe
@@ -2565,7 +2565,7 @@ return new Decimal(109123).sub(player.E.points.mul(10))
     update(diff)
     {
         player.E.random = new Decimal(Math.random()*10)
-        if(player.E.freeze.gt(0))player.E.freeze = player.E.freeze.sub(new Decimal(3).mul(diff))
+        if(player.E.freeze.gt(0))player.E.freeze = player.E.freeze.sub(new Decimal(5).mul(diff))
         if(player.E.freeze.lt(0))player.E.freeze = new Decimal(0)
     },
     branches:["C"],
@@ -2650,7 +2650,7 @@ addLayer("L", {
     baseAmount() { return player.points },  // A function to return the current amount of baseResource.
 
     requires: new Decimal(10),              // The amount of the base needed to  gain 1 of the prestige currency.
-    tooltip(){return "排行榜(第89名)"},                     // Also the amount required to unlock the layer.
+    tooltip(){return "排行榜"},                     // Also the amount required to unlock the layer.
 
     type: "normal",                         // Determines the formula used for calculating prestige currency.
     exponent: 0.5,                          // "normal" prestige gain is (currency^exponent).
@@ -8917,10 +8917,11 @@ return mult
         if(hasMilestone("E",2))eff = eff.mul(player.points.add(10).log10().log2().root(5))
         if(hasMilestone("E",4))eff = eff.pow(2)
         if(hasUpgrade("C",25))eff = eff.mul(upgradeEffect("C",25))
+        if(hasMilestone("C",4))eff = eff.mul(tmp.C.effectGold2)
         return eff
     },
     tabFormat:{
-        "Main":{
+        "Experience":{
             content:[
     "blank",
     ["display-text",
@@ -9052,8 +9053,8 @@ unlocked(){return hasMilestone("E",7)},
             display() {return `增加所有好文精华获取速度。\n当前等级： ${format(getBuyableAmount(this.layer, this.id))}\n价格：${format(this.cost())}天赋点\n效果：所有好文精华获取速度x${format(this.effect())}`},
             effect(x) { 
                 let base = new Decimal(1)
-                if(!hasMilestone("E",9))mult2 = base.pow(x)
-                if(hasMilestone("E",9))mult2 = base.pow(player.Exp.best21)
+                if(!hasMilestone("E",9))mult2 = base.add(x)
+                if(hasMilestone("E",9))mult2 = base.add(player.Exp.best21)
                 return mult2},
                 style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
             unlocked(){return hasMilestone("E",6)}
@@ -9186,7 +9187,7 @@ addLayer("Nf", {
             }
           },
           22: {
-            title: "中庸迎战",
+            title: "中庸迎战(默认策略)",
             canAfford() { return true},
             buy() {
                 setBuyableAmount("Nf",21,new Decimal(0))
@@ -9243,3 +9244,33 @@ content:[function() {if(hasMilestone("C",2))return ["row",[["buyable",21],["buya
         // Look in the upgrades docs to see what goes here!
     },
 })
+function examReset()
+{
+    setBuyableAmount("E",31,new Decimal(0))
+    setBuyableAmount("E",32,new Decimal(0))
+    setBuyableAmount("E",33,new Decimal(0))
+    setBuyableAmount("E",34,new Decimal(0))
+    setBuyableAmount("E",35,new Decimal(0))
+    setBuyableAmount("E",36,new Decimal(0))
+    setBuyableAmount("E",37,new Decimal(0))
+    setBuyableAmount("E",38,new Decimal(0))
+    setBuyableAmount("E",39,new Decimal(0))
+    setBuyableAmount("E",40,new Decimal(0))
+    setBuyableAmount("E",41,new Decimal(0))
+    setBuyableAmount("E",42,new Decimal(0))
+    setBuyableAmount("E",44,new Decimal(0))
+    setBuyableAmount("E",45,new Decimal(0))
+    setBuyableAmount("E",46,new Decimal(0))
+    setBuyableAmount("E",47,new Decimal(0))
+    setBuyableAmount("E",48,new Decimal(0))
+    setBuyableAmount("E",49,new Decimal(0))
+    setBuyableAmount("E",68,new Decimal(0))
+    setBuyableAmount("E",69,new Decimal(0))
+    setBuyableAmount("E",71,new Decimal(0))
+    setBuyableAmount("E",72,new Decimal(0))
+    setBuyableAmount("E",73,new Decimal(0))
+    setBuyableAmount("E",75,new Decimal(0))
+    setBuyableAmount("E",76,new Decimal(0))
+    setBuyableAmount("E",77,new Decimal(0))
+
+}

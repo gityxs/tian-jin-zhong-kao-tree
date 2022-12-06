@@ -45,7 +45,7 @@ function getPointGen() {
 	if(hasUpgrade("C",13)) gain = gain.mul(upgradeEffect("C",13))
 	if(hasUpgrade("C",15)) gain = gain.mul(upgradeEffect("C",15))
 	if(hasMilestone("E",1)) gain = gain.mul(player.E.bestPoints)
-	if(player.Exp.unlocked) gain = gain.mul(tmp.Exp.effect)
+	if(player.Exp.level.gte(1)) gain = gain.mul(tmp.Exp.effect)
 	if(getBuyableAmount("Exp",11).gte(1)||hasUpgrade("C",41)) gain = gain.mul(buyableEffect("Exp",11))
 	if(player.C.totalGold.gte(1)) gain = gain.mul(tmp.C.effectGold1)
 	return gain
