@@ -41,7 +41,6 @@ var cnItems = {
     "Completed": "已完成",
     "Achievement Gotten!": "成就达成！",
     "Currently:": "当前:",
-    "Currently:": "语文",
     "Experience": "经验",
     "Genius": "天赋",
     "Transformers": "天赋转换器",
