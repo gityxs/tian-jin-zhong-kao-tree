@@ -2060,8 +2060,8 @@ return hasMilestone("E",2)
     unlocked() { return player.E.inExam.gte(1) }, 
     canAfford() { return true},
     buy() { 
-    if(player.Exp.unlocked)player.Exp.points = player.Exp.points.add(new Decimal(10).mul(tmp.Exp.expMult))
-    if(player.Exp.unlocked)player.Exp.points = player.Exp.points.add(player.E.points.mul(5).mul(tmp.Exp.expMult))
+    if(hasMilestone("E",1))player.Exp.points = player.Exp.points.add(new Decimal(10).mul(tmp.Exp.expMult))
+    if(hasMilestone("E",1))player.Exp.points = player.Exp.points.add(player.E.points.mul(5).mul(tmp.Exp.expMult))
     if(player.E.points.gte(6))player.Exp.points = player.Exp.points.add((player.E.points.sub(5)).mul(100).mul(tmp.Exp.expMult))
     if(player.E.points.gte(11))player.Exp.points = player.Exp.points.add((player.E.points.sub(10)).mul(10000).mul(tmp.Exp.expMult))
     player.E.inExam = new Decimal(0)
