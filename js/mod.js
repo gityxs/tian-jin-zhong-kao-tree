@@ -13,14 +13,14 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "Beta v0.0.1",
-	name: "梦之肇始",
+	num: "Beta v0.0.2",
+	name: "写作之路",
 }
 
 let changelog = `这里什么都没有<br>过段时间再来看看吧`
 		
 
-let winText = `恭喜你！你取得了该版本的毕业成绩！可喜可贺！<br>作者到达该版本毕业成绩的时间为2105年，你的成绩超越作者了吗？<br>作者：Jing Wenxuan From Tianjin Zili High School(Grade9,Class3)`
+let winText = `恭喜你！你取得了该版本的毕业成绩！可喜可贺！<br>作者到达该版本毕业成绩的时间为2130年，你的成绩超越作者了吗？<br>作者：Jing Wenxuan From Tianjin Zili High School(Grade9,Class3)`
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
 // (The ones here are examples, all official functions are already taken care of)
@@ -60,7 +60,7 @@ function addedPlayerData() { return {
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.E.bestPoints.gte(16)
+	return player.E.bestPoints.gte(42)
 }
 
 function calculateDay() {
@@ -96,8 +96,12 @@ function maxTickLength() {
 function fixOldSave(oldVersion){
 }
 var displayThings = [
-	"当前残局:中考最佳分数达到16分",
+	"当前残局:中考最佳分数达到42分",
 	"*目前游戏处于Beta版本，如遇到bug或者平衡问题可联系qq2119542935*",
-	function(){return formatDay()}
+	function(){return formatDay()},
+	function(){if (player.E.year.lte(2095)) return "<h4 style='color:#87CEFA;text-shadow:0px 0px 10px;'>铂金通关："+player.E.year+" / 2095 年</h4>"
+	else if (player.E.year.lte(2110)) return "<h4 style='color:#FFFF00;text-shadow:0px 0px 10px;'>黄金通关："+player.E.year+" / 2110 年</h4>"
+	else if (player.E.year.lte(2125)) return "<h4 style='color:#C0C0C0;text-shadow:0px 0px 10px;'>白银通关："+player.E.year+" / 2125 年</h4>"
+	else if (player.E.year.lte(2140)) return "<h4 style='color:#A52A2A;text-shadow:0px 0px 10px;'>青铜通关："+player.E.year+" / 2140 年</h4>"}
 	
 ]

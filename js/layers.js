@@ -4,7 +4,12 @@ addLayer("C", {
         points: new Decimal(0),
         tier: new Decimal(0),
         brainTier: new Decimal(0),
+        cbrainTier: new Decimal(0),
         readingPoints: new Decimal(0),
+        cpower: new Decimal(0),
+        cfreeze: new Decimal(0),
+        cq: new Decimal(0),
+        cpps: new Decimal(0),
         power: new Decimal(1),
         freeze: new Decimal(1),
         currentlyFreeze: new Decimal(1),
@@ -16,10 +21,22 @@ addLayer("C", {
         remain1: new Decimal(2),
         total1: new Decimal(0),
         balance1: new Decimal(0),
+        remain2: new Decimal(5),
+        total2: new Decimal(0),
+        balance2: new Decimal(0),
         end: new Decimal(0),
         read: new Decimal(0),
                   // "points" is the internal name for the main resource of the layer.
     }},
+    maxTier()
+    {
+        let max = new Decimal(0)
+        if(getBuyableAmount("C",54).gte(1)) max = max.add(1)
+        if(getBuyableAmount("C",60).gte(1)) max = max.add(1)
+        if(getBuyableAmount("C",61).gte(1)) max = max.add(1)
+        if(getBuyableAmount("C",68).gte(1)) max = max.add(1)
+        return max
+    },
     goldMult()
     {
         let mult = new Decimal(1)
@@ -42,7 +59,10 @@ addLayer("C", {
     {
         let mult = new Decimal(1)
         if((getBuyableAmount("C",41)).gte(1)) mult = mult.mul(buyableEffect("C",41))
+        if((getBuyableAmount("Exp",56)).gte(1)) mult = mult.mul(buyableEffect("Exp",56))
         if(player.C.totalGold.gte(1)) mult = mult.mul(tmp.C.effectGold2)
+        if((getBuyableAmount("Exp",57)).gte(1)||player.Exp.bought58) mult = mult.mul(buyableEffect("Exp",57))
+        if(hasMilestone("E",13)) mult = mult.mul(10)
         return mult
     },
     effectGold1()
@@ -58,6 +78,11 @@ addLayer("C", {
     effect1()
     {
     let eff = player.C.total1.add(1).pow(5).min(5e15)
+    return eff
+    },
+    effect2()
+    {
+    let eff = player.C.total2.add(1).sqrt().min(35)
     return eff
     },
     
@@ -87,6 +112,18 @@ addLayer("C", {
             style() { return {borderColor: "#FFFF00",}},
             titleStyle() { return {backgroundColor: "#FFFF00",color: "#000000"}},
     },
+    3: {
+        title(){return "2阶好文精华"},
+        body(){
+                let a = "您总共获得过<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(player.C.total2)+"<h4>个2阶好文精华，加成经验获取<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(tmp.C.effect2)+"x<h4>(上限在35).<br>"
+                let b = "您当前拥有<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(player.C.balance2)+"<h4>个2阶好文精华。<br>"
+                let c = "领悟每个2阶好文精华可获得<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>8<h4>阅读感悟。"
+
+                return a + b + c
+        },
+        style() { return {borderColor: "#444444",}},
+        titleStyle() { return {backgroundColor: "#444444",color: "#FFFFFF"}},
+},
     },
     buyables:
     {
@@ -98,7 +135,8 @@ addLayer("C", {
                setBuyableAmount("Nf",12,new Decimal(0))
             },
             display() {return "脑洞力量："+format(player.C.power)+"<br>思维活跃度："+format(player.C.q)+"%<br>阅读冷却："+format(player.C.freeze)+"s<br>每秒阅读能力:"+format(player.C.pps)},
-            style() { return {'background-color': "#111111",color: "white", 'border-color': "#444444",'border-radius': "5px", height: "120px", width: "240px"}},
+            style() { if(player.C.brainTier.lt(2))return {'background-color': "#111111",color: "white", 'border-color': "#444444",'border-radius': "5px", height: "120px", width: "240px"}
+            if(player.C.brainTier.gte(2)&&player.C.brainTier.lt(3))return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "120px", width: "240px"}},
             unlocked(){return true},
             
           },
@@ -109,11 +147,12 @@ addLayer("C", {
                setBuyableAmount("Nf",11,new Decimal(1))
                setBuyableAmount("Nf",12,new Decimal(0))
             },
-            display() {return "阅读进度："+format(player.C.remain1)+"/ 2<br>阅读奖励：<br>(100%)1阶好文精华*1<br>(2.5%)金句摘抄*1"},
+            display() {return "阅读进度："+format(player.C.remain1)+"/ 2<br>阅读奖励：<br>(100%)1阶好文精华*1"},
             style() { return {'background-color': "#111111",color: "white", 'border-color': "#444444",'border-radius': "5px", height: "120px", width: "240px"}},
             unlocked(){return player.C.current == 1},
             
           },
+          
           31: {
             title: "领悟x1",
             canAfford() { return player.C.balance1.gte(1)},
@@ -237,15 +276,268 @@ return gain
             unlocked(){return hasMilestone("C",4)},
             style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
           },
+          51: {
+            title: "←",
+            canAfford() { return player.C.tier.gte(1)},
+            buy() {
+            player.C.tier = player.C.tier.sub(1)
+            },
+            
+            display() {return ""},
+            style() { return {'border-radius': "30% 0% 0% 30%", height: "50px", width: "50px"}},
+            unlocked(){return player.Exp.bought56},
+            
+          },
+          52: {
+            title: "→",
+            canAfford() { return player.C.tier.lt(tmp.C.maxTier)},
+            buy() {
+            player.C.tier = player.C.tier.add(1)
+            },
+            
+            display() {return ""},
+            style() { return {'border-radius': "0% 30% 30% 0%", height: "50px", width: "50px"}},
+            unlocked(){return player.Exp.bought56},
+            
+          },
+          53: {
+            title: "名著",
+            canAfford() { return false},
+            cost(x) {return new Decimal(200).mul(new Decimal(5).pow(x))},
+            buy() {
+              player.C.readingPoints = player.C.readingPoints.sub(this.cost())
+              setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+               
+            },
+            display() {return `当前名著阶层： ${player.C.tier}\nTips：名著阶层越高，出现的精选好文越高阶，收益也就越高！`},
+            effect(x) { 
+              let base = new Decimal(0.5)
+              mult2 = base.mul(x)
+              return mult2},
+            unlocked(){return player.Exp.bought56},
+            style() { return {'background-color': "#888888",'border-radius': "5px", height: "100px", width: "200px"}},
+          },
+          54: {
+            title: "名著许可α",
+            canAfford() { return player.C.readingPoints.gte(this.cost()) },
+            buy() {
+               setBuyableAmount(this.layer,this.id,new Decimal(1))
+            },
+            cost(x) {return new Decimal(1.5e8)},
+            display() {return "获得阅读下一阶名著的许可。在1阶名著，将会解锁2阶精选好文！<br>需要："+format(this.cost())+"阅读感悟"},
+            style() { return {'background-color': "#111111",color: "white", 'border-color': "#444444",'border-radius': "5px", height: "120px", width: "240px"}},
+            unlocked(){return player.Exp.bought56&&getBuyableAmount(this.layer,this.id).lt(1)},
+            
+          },
+          55: {
+            title: "2阶精选好文",
+            canAfford() { return false},
+            buy() {
+               setBuyableAmount("Nf",11,new Decimal(1))
+               setBuyableAmount("Nf",12,new Decimal(0))
+            },
+            display() {return "阅读进度："+format(player.C.remain2)+"/ 5<br>阅读奖励：<br>(100%)2阶好文精华*1"},
+            style() { return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "120px", width: "240px"}},
+            unlocked(){return player.C.current == 2},
+            
+          },
+          56: {
+            title: "领悟x1",
+            canAfford() { return player.C.balance2.gte(1)},
+            buy() {
+            player.C.readingPoints = player.C.readingPoints.add(this.gain())
+            player.C.balance2 = player.C.balance2.sub(1) 
+            },
+            gain()
+            {
+let gain = new Decimal(8)
+gain = gain.mul(tmp.C.readingPointsMult)
+return gain
+            },
+            display() {return "领悟1个2阶精选好文，并获取 "+format(this.gain())+" 阅读感悟。"},
+            style() { return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "100px", width: "200px"}},
+            unlocked(){return hasMilestone("E",8)},
+            
+          },
+          57: {
+            title: "领悟50%",
+            canAfford() { return player.C.balance2.gte(1)},
+            buy() {
+            player.C.readingPoints = player.C.readingPoints.add(this.gain())
+            player.C.balance2 = player.C.balance2.sub(player.C.balance2.mul(0.5).floor())
+            },
+            gain()
+            {
+let gain = new Decimal(8)
+gain = gain.mul(tmp.C.readingPointsMult).mul(player.C.balance2.mul(0.5).floor())
+return gain
+            },
+            display() {return "领悟您50%的2阶精选好文，并获取 "+format(this.gain())+" 阅读感悟。"},
+            style() { return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "100px", width: "200px"}},
+            unlocked(){return hasMilestone("E",8)},
+            
+          },
+          58: {
+            title: "领悟100%",
+            canAfford() { return player.C.balance2.gte(1)},
+            buy() {
+            player.C.readingPoints = player.C.readingPoints.add(this.gain())
+            player.C.balance2 = new Decimal(0)
+            },
+            gain()
+            {
+let gain = new Decimal(8)
+gain = gain.mul(tmp.C.readingPointsMult).mul(player.C.balance2)
+return gain
+            },
+            display() {return "领悟您100%的2阶精选好文，并获取 "+format(this.gain())+" 阅读感悟。"},
+            style() { return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "100px", width: "200px"}},
+            unlocked(){return hasMilestone("E",8)},
+            
+          },
+          59: {
+            title: "阅读技能5:写作效率提升",
+            canAfford() { return player.C.readingPoints.gte(this.cost())&&buyableEffect(this.layer,this.id).lt(9)},
+            cost(x) {return new Decimal(10).pow(new Decimal(2).pow(x))},
+            buy() {
+              player.C.readingPoints = player.C.readingPoints.sub(this.cost())
+              setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+               
+            },
+            display() {return `减少写作中两次属性提升的时间间隔。\n当前等级： ${format(getBuyableAmount(this.layer, this.id))}\n价格：${format(this.cost())}阅读感悟\n效果：时间间隔-${format(this.effect())}tick`},
+            effect(x) { 
+              let base = new Decimal(0)
+              mult2 = base.add(x)
+              if(hasMilestone("E",13)) mult2 = mult2.add(1)
+              if(getBuyableAmount("Exp",62).gte(1)) mult2 = mult2.add(2)
+              return mult2},
+            unlocked(){return player.Exp.bought58},
+            style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
+          },
+          60: {
+            title: "名著许可β",
+            canAfford() { return player.C.readingPoints.gte(this.cost())&&player.E.bestPoints.gte(32) },
+            buy() {
+               setBuyableAmount(this.layer,this.id,new Decimal(1))
+            },
+            cost(x) {return new Decimal(5e11)},
+            display() {return "获得阅读下一阶名著的许可。在2阶名著，2阶精选好文的出现概率将会提升！<br>需要："+format(this.cost())+"阅读感悟&中考最高分数达到 32"},
+            style() { return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "120px", width: "240px"}},
+            unlocked(){return player.C.tier.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+            
+          },
+          61: {
+            title: "名著许可γ",
+            canAfford() { return player.C.readingPoints.gte(this.cost())&&player.E.bestPoints.gte(33) },
+            buy() {
+               setBuyableAmount(this.layer,this.id,new Decimal(1))
+            },
+            cost(x) {return new Decimal(2e12)},
+            display() {return "获得阅读下一阶名著的许可。在3阶名著，2阶精选好文的出现概率将会提升！<br>需要："+format(this.cost())+"阅读感悟&中考最高分数达到 33"},
+            style() { return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "120px", width: "240px"}},
+            unlocked(){return player.C.tier.gte(2)&&getBuyableAmount(this.layer,this.id).lt(1)},
+            
+          },
+          64: {
+            title: "当前已打造脑洞属性",
+            canAfford() { return false },
+            buy() {
+               setBuyableAmount(this.layer,this.id,new Decimal(1))
+            },
+            cost(x) {return new Decimal(2e12)},
+            display() {return "脑洞力量："+format(player.C.cpower)+"<br>思维活跃度："+format(player.C.cq)+"%<br>阅读冷却："+format(player.C.cfreeze)+"s<br>每秒阅读能力："+format(player.C.cpps)},
+            style() { return {'background-color': "#666666",color: "white", 'border-color': "#AAAAAA",'border-radius': "5px", height: "120px", width: "240px"}},
+            unlocked(){return true},
+            
+          },
+          65: {
+            title: "应用",
+            canAfford() { return player.C.cpps.gte(1)},
+            buy() {
+               player.C.pps = player.C.cpps
+               player.C.power = player.C.cpower
+               player.C.freeze = player.C.cfreeze
+               player.C.q = player.C.cq
+               player.C.brainTier = player.C.cbrainTier
+            },
+            cost(x) {return new Decimal(2e12)},
+            display() {return ""},
+            style() { return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "5px", height: "60px", width: "120px"}},
+            unlocked(){return true},
+            
+          },
+          66: {
+            title: "取消",
+            canAfford() { return player.C.cpps.gte(1)},
+            buy() {
+               player.C.cpps = new Decimal(0)
+               player.C.cq = new Decimal(0)
+               player.C.cpower = new Decimal(0)
+               player.C.cfreeze = new Decimal(0)
+            },
+            cost(x) {return new Decimal(2e12)},
+            display() {return ""},
+            style() { return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "5px", height: "60px", width: "120px"}},
+            unlocked(){return true},
+            
+          },
+          67: {
+            title: "打造2阶脑洞",
+            canAfford() { return player.C.balance2.gte(this.cost1())&&player.C.readingPoints.gte(this.cost2())&&player.C.balanceGold.gte(this.cost3()) },
+            buy() {
+               player.C.balance2 = player.C.balance2.sub(this.cost1())
+               player.C.readingPoints = player.C.readingPoints.sub(this.cost2())
+               player.C.balanceGold = player.C.balanceGold.sub(this.cost3())
+               player.C.cq = player.E.random.mul(10)
+               player.C.cpps = new Decimal(5).mul(player.C.cq).div(100)
+               player.C.cfreeze = new Decimal(Math.random()*10).div(5)
+               player.C.cpower = player.C.cpps.mul(player.C.cfreeze)
+               player.C.cbrainTier = new Decimal(2)
+            },
+            cost1()
+            {return new Decimal(300)},
+            cost2()
+            {return new Decimal(1e12)},
+            cost3()
+            {return new Decimal(10)},
+            cost(x) {return new Decimal(2e12)},
+            display() {return "使用2阶好文精华和阅读感悟、金句摘抄，打造2阶的随机属性脑洞。<br>基础每秒阅读能力:2.5<br>花费2阶好文精华："+format(this.cost1())+"<br>花费阅读点数："+format(this.cost2())+"<br>花费金句摘抄："+format(this.cost3())},
+            style() { return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "240px", width: "240px"}},
+            unlocked(){return true},
+            
+          },
+          68: {
+            title: "名著许可δ",
+            canAfford() { return player.C.readingPoints.gte(this.cost())&&player.E.bestPoints.gte(38) },
+            buy() {
+               setBuyableAmount(this.layer,this.id,new Decimal(1))
+            },
+            cost(x) {return new Decimal(6e12)},
+            display() {return "获得阅读下一阶名著的许可。在4阶名著，2阶精选好文的出现概率将会提升！<br>需要："+format(this.cost())+"阅读感悟&中考最高分数达到 38"},
+            style() { return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "120px", width: "240px"}},
+            unlocked(){return player.C.tier.gte(3)&&getBuyableAmount(this.layer,this.id).lt(1)},
+            
+          },
     },
     update(diff)
     {
     if(player.C.remain1.lte(0)&&!tmp.C.goldChance.gte(player.E.random.mul(10))) player.C.remain1 = new Decimal(2), player.C.balance1 = player.C.balance1.add(tmp.C.readMult), player.C.total1 = player.C.total1.add(tmp.C.readMult), player.C.end = new Decimal(1)
     if(player.C.remain1.lte(0)&&tmp.C.goldChance.gte(player.E.random.mul(10))) player.C.remain1 = new Decimal(2), player.C.balance1 = player.C.balance1.add(tmp.C.readMult), player.C.total1 = player.C.total1.add(tmp.C.readMult), player.C.end = new Decimal(1),player.C.totalGold = player.C.totalGold.add(tmp.C.goldMult),player.C.balanceGold = player.C.balanceGold.add(tmp.C.goldMult)
-    if(player.C.end.gte(1)&&player.C.tier == 0) player.C.current = new Decimal(1)
+    if(player.C.remain2.lte(0)&&!tmp.C.goldChance.gte(player.E.random.mul(10))) player.C.remain2 = new Decimal(5), player.C.balance2 = player.C.balance2.add(tmp.C.readMult), player.C.total2 = player.C.total2.add(tmp.C.readMult), player.C.end = new Decimal(1)
+    if(player.C.remain2.lte(0)&&tmp.C.goldChance.gte(player.E.random.mul(10))) player.C.remain2 = new Decimal(5), player.C.balance2 = player.C.balance2.add(tmp.C.readMult), player.C.total2 = player.C.total2.add(tmp.C.readMult), player.C.end = new Decimal(1),player.C.totalGold = player.C.totalGold.add(tmp.C.goldMult),player.C.balanceGold = player.C.balanceGold.add(tmp.C.goldMult)
+    if(player.C.end.gte(1)&&player.C.tier == 0) player.C.current = new Decimal(1),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 1&&player.E.random.lt(9)) player.C.current = new Decimal(1),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 1&&player.E.random.gte(9)) player.C.current = new Decimal(2),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 2&&player.E.random.lt(7)) player.C.current = new Decimal(1),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 2&&player.E.random.gte(7)) player.C.current = new Decimal(2),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 3&&player.E.random.lt(5)) player.C.current = new Decimal(1),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 3&&player.E.random.gte(5)) player.C.current = new Decimal(2),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 4&&player.E.random.lt(3)) player.C.current = new Decimal(1),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 4&&player.E.random.gte(3)) player.C.current = new Decimal(2),player.C.end = new Decimal(0)
     if(hasMilestone("E",6)) player.C.currentlyFreeze = player.C.currentlyFreeze.sub(diff)
     if(player.C.currentlyFreeze.lt(0)) player.C.currentlyFreeze = player.C.freeze, player.C.read = new Decimal(1)
     if(player.C.read.gte(1)&&player.C.current == 1) player.C.remain1 = player.C.remain1.sub(player.C.power),player.C.read = new Decimal(0)
+    if(player.C.read.gte(1)&&player.C.current == 2) player.C.remain2 = player.C.remain2.sub(player.C.power),player.C.read = new Decimal(0)
     },
     
     color: "#888888",                       // The color for this layer, which affects many elements.
@@ -261,12 +553,14 @@ return gain
     type: "normal",                         // Determines the formula used for calculating prestige currency.
     exponent: 0.5,                          // "normal" prestige gain is (currency^exponent).
     softcap() {
-        let sc = new Decimal("1e16")
+        let sc = new Decimal(1e16)
+        if(hasMilestone("C",12)) sc = sc.plus(1e16)
         return sc;
     },
     softcapPower() {
         let scp = new Decimal(0.53)
         if(hasMilestone("C",3)) scp = scp.plus(0.03)
+        if(hasMilestone("E",12)) scp = scp.plus(0.03)
         return scp;
     },
     gainMult() {                            // Returns your multiplier to your gain of the prestige resource.
@@ -277,6 +571,7 @@ return gain
         if(getBuyableAmount("Exp",12).gte(1)||hasUpgrade("C",42)) gain = gain.mul(buyableEffect("Exp",12))
         if(hasMilestone("E",6)) gain = gain.mul(tmp.C.effect1)
         if(player.C.totalGold.gte(1)) gain = gain.mul(tmp.C.effectGold1)
+        if(player.Exp.bought58) gain = gain.mul(buyableEffect("Exp",58))
         return gain            // Factor in any bonuses multiplying gain here.
     },
     gainExp() {                             // Returns the exponent to your gain of the prestige resource.
@@ -309,7 +604,7 @@ return gain
                 if(!hasMilestone("C",1)) eff = player.C.points.add(1).log10().max(1)
                 if(hasMilestone("C",1)) eff = player.C.points.add(1).log2().max(1)
                 if(hasUpgrade("C",22)) eff = eff.mul(eff.log10())
-                if(getBuyableAmount("Exp",13).gte(1)) eff = eff.mul(buyableEffect("Exp",13))
+                if(getBuyableAmount("Exp",13).gte(1)||hasMilestone("E",13)) eff = eff.mul(buyableEffect("Exp",13))
                 return eff
                 },
                 unlocked(){return hasMilestone("E",0)&&hasUpgrade("C",11)},
@@ -323,7 +618,7 @@ return gain
                     effect(){ 
                     eff = player.points.add(10).log10()
                     if(hasUpgrade("C",22)) eff = eff.mul(eff.log10())
-                    if(getBuyableAmount("Exp",13).gte(1)) eff = eff.mul(buyableEffect("Exp",13))
+                    if(getBuyableAmount("Exp",13).gte(1)||hasMilestone("E",13)) eff = eff.mul(buyableEffect("Exp",13))
                     return eff
                     },
                     unlocked(){return hasMilestone("E",0)&&hasUpgrade("C",12)},
@@ -337,7 +632,7 @@ return gain
                         effect(){ 
                         eff = player.points.add(10).log10().root(1.5)
                         if(hasUpgrade("C",22)) eff = eff.mul(eff.log10())
-                        if(getBuyableAmount("Exp",13).gte(1)) eff = eff.mul(buyableEffect("Exp",13))
+                        if(getBuyableAmount("Exp",13).gte(1)||hasMilestone("E",13)) eff = eff.mul(buyableEffect("Exp",13))
                         return eff
                         },
                         unlocked(){return hasMilestone("E",0)&&hasUpgrade("C",13)},
@@ -352,7 +647,7 @@ return gain
                             if(!hasUpgrade("C",24))eff = new Decimal(2).pow(player.E.year.sub(2022)).min(128)
                             if(hasUpgrade("C",24))eff = new Decimal(2).pow(player.E.year.sub(2022)).min(4096)
                             if(hasUpgrade("C",22)) eff = eff.mul(eff.log10())
-                            if(getBuyableAmount("Exp",13).gte(1)) eff = eff.mul(buyableEffect("Exp",13))
+                            if(getBuyableAmount("Exp",13).gte(1)||hasMilestone("E",13)) eff = eff.mul(buyableEffect("Exp",13))
                             return eff
                             },
                             unlocked(){return hasMilestone("E",0)&&hasUpgrade("C",14)},
@@ -542,6 +837,13 @@ return gain
                 return player.C.totalGold.gte(3)
             }
         },
+        5: {
+            requirementDescription: "最高名著阶层达到 3(5)",
+            effectDescription: "你可以花费不同阶层的好文精华来精炼你的脑洞，提升阅读效率。在语文考试中追加综合性学习。同时你可以挖掘Uncommon级别的写作手法了！",
+            done() {
+                return player.C.tier.gte(3)
+            }
+        },
     },
     passiveGeneration(){return hasMilestone('C',1)? 1 : 0},
     tabFormat:{
@@ -551,7 +853,16 @@ return gain
     function(){if(!hasMilestone("C",1))return "prestige-button"},
     "blank",
     ["display-text",
-            function() {return "↑点击以学习语文，提升语文知识！"},
+            function() {if(!hasMilestone("C",1)) return "↑点击以学习语文，提升语文知识！"},
+            {}],
+            ["display-text",
+            function() {if(hasMilestone("C",1)) return "你正在每秒获取"+format(tmp.C.gainMult.pow(tmp.C.gainExp))+"基础语文知识"},
+            {}],
+            ["display-text",
+            function() {if(tmp.C.gainMult.gte(tmp.C.softcap)) return "软上限力量："+format(new Decimal(1).sub(tmp.C.softcapPower).mul(100))+"%"},
+            {}],
+            ["display-text",
+            function() {if(tmp.C.gainMult.gte(tmp.C.softcap)) return "软上限起始于："+format(tmp.C.softcap)+""},
             {}],
     "grid",
 
@@ -574,13 +885,22 @@ return gain
             ["display-text",
             function() {if(hasMilestone("E",8))return "当前每次阅读获取金句摘抄的概率为 <h2 style='color:#FFFF00;text-shadow:0px 0px 10px;'>"+format(tmp.C.goldChance)+ "%<h2>"},
             {}],
+            ["display-text",
+            function() {return "<h4 style='color:#FF0000;text-shadow:0px 0px 10px;'>Warning:阅读是一个长期积累的过程。如果你在阅读过程中离线，阅读的收益会严重降低！<h4>"},
+            {}],
+            
+            ["row",[["buyable",51],["buyable",53],["buyable",52]]],
 ["buyable",11],
-["buyable",21],
+["row",[["buyable",21],["buyable",54],["buyable",55],["buyable",60],["buyable",61],["buyable",68]]],
 function(){if(player.C.totalGold.gte(1))return ["infobox","2"]},
 function(){if(player.C.total1.gte(1))return ["infobox","1"]},
 
+
 ["row",[["buyable",31],["buyable",32],["buyable",33]]],
+function(){if(player.C.total2.gte(1))return ["infobox","3"]},
+["row",[["buyable",56],["buyable",57],["buyable",58]]],
 ],
+
 unlocked(){return hasMilestone("E",6)}
 },
 "ReadingSkill":{
@@ -590,9 +910,26 @@ unlocked(){return hasMilestone("E",6)}
             function() {if(hasMilestone("E",8))return "您当前拥有的阅读感悟为 <h2 style='color:#888888;text-shadow:0px 0px 10px;'>"+format(player.C.readingPoints)+ "<h2>"},
             {}],
 ["row",[["buyable",41],["buyable",42],["buyable",43]]],
-["row",[["buyable",44]]],
+["row",[["buyable",44],["buyable",59]]],
 ],
 unlocked(){return hasMilestone("E",8)}
+},
+"ReadingUpgrade":{
+    content:[
+"main-display",
+["display-text",
+            function() {if(hasMilestone("E",8))return "您当前拥有的阅读感悟为 <h2 style='color:#888888;text-shadow:0px 0px 10px;'>"+format(player.C.readingPoints)+ "<h2>"},
+            {}],
+            ["display-text",
+            function() {return "*Tips:应用意味着用打造的脑洞来替换目前的脑洞。如果脑洞的每秒阅读能力低于1，将会无法应用脑洞。"},
+            {}],
+            ["row",[["buyable",64]]],
+            ["row",[["buyable",65],["buyable",66]]],
+            ["row",[["buyable",67]]],
+
+
+],
+unlocked(){return hasMilestone("C",5)}
 },
 }
 })
@@ -611,16 +948,70 @@ addLayer("E", {
         inChinese: new Decimal(0),
         ChineseBest: new Decimal(0),
         ChineseTime: new Decimal(0),
-        freeze: new Decimal(0),       // "points" is the internal name for the main resource of the layer.
+        zuowenTime: new Decimal(0),
+        inZuowen: new Decimal(0),
+        startedZuowen: new Decimal(0),
+        completedZuowen: new Decimal(0),
+        ccSelected1: new Decimal(1),
+        ccSelected2: new Decimal(1),
+        ccPoints: new Decimal(0),
+        ccBest: new Decimal(0),
+        ccRandom0: new Decimal(0),
+        ccRandom1: new Decimal(0),
+        ccRandom2: new Decimal(0),
+        luojiMult: new Decimal(0),
+        wenbiMult: new Decimal(0),
+        sixiangMult: new Decimal(0),
+        xiangxiangMult: new Decimal(0),
+        luoji: new Decimal(0),
+        wenbi: new Decimal(0),
+        sixiang: new Decimal(0),
+        xiangxiang: new Decimal(0),
+        story: new Decimal(0),
+        freeze: new Decimal(0),
+        ccFreeze: new Decimal(10)    // "points" is the internal name for the main resource of the layer.
     }},
+    nodeStyle() {
+        if(player.E.bestPoints.lt(30))return {
+            'color': '#FFFFFF',
+            'background-image': 'url(https://i.postimg.cc/W3PhYtLp/Rating-0.png)',
+            'background-position': 'center center',
+            'background-size': '150%',
+            'border': '4px solid #FFFFFF'
+        }
+        if(player.E.bestPoints.gte(30))return {
+            'color': '#FFFFFF',
+            'background-image': 'url(https://i.postimg.cc/QMvGBwDK/Rating-1.png)',
+            'background-position': 'center center',
+            'background-size': '150%',
+            'border': '4px solid #FFFFFF'
+        }
+        
+    },  
+    
 
     color: "#FFFFFF",                       // The color for this layer, which affects many elements.
     resource: "中考分数",            // The name of this layer's main prestige resource.
     row: 1,                                 // The row this layer is on (0 is the first row).
 
     baseResource: "学分",                 // The name of the resource your prestige gain is based on.
-    baseAmount() { return player.points },  // A function to return the current amount of baseResource.
-
+    baseAmount() { return player.points },
+    symbol()
+    {
+return "E<sup>"+player.E.bestPoints+"</sup>"
+    },// A function to return the current amount of baseResource.
+cclim1()
+{
+let lim = new Decimal(1)
+if(getBuyableAmount("Exp",55).gte(1)) lim = lim.add(1)
+return lim
+},
+cclim2()
+{
+let lim = new Decimal(1)
+if(getBuyableAmount("Exp",55).gte(1)) lim = lim.add(1)
+return lim
+},
     requires: new Decimal(10),              // The amount of the base needed to  gain 1 of the prestige currency.
                                             // Also the amount required to unlock the layer.
 
@@ -632,6 +1023,16 @@ addLayer("E", {
     },
     gainExp() {                             // Returns the exponent to your gain of the prestige resource.
         return new Decimal(1)
+    },
+    ccTotal1()
+    {
+let total = new Decimal(3)
+return total
+    },
+    ccTotal2()
+    {
+let total = new Decimal(3)
+return total
     },
     milestones:{
         0: {
@@ -732,16 +1133,57 @@ return hasMilestone("E",2)
                             },
         },
         10: {
-            requirementDescription: "最佳中考分数达到 16 (10)",
-            effectDescription: "恭喜目前版本毕业！",
+            requirementDescription: "最佳中考分数达到 17 (10)",
+            effectDescription: "在语文考试中追加作文。作文是语文考试的大分题！",
             done() {
-                return player.E.bestPoints.gte(16)
+                return player.E.bestPoints.gte(17)
             },
             unlocked(){
                 return hasMilestone("E",9)
                             },
         },
+        11: {
+            requirementDescription: "最佳中考分数达到 27 (11)",
+            effectDescription: "在经验选项卡下追加天赋树，并且解锁 1 个全新的天赋转换器。",
+            done() {
+                return player.E.bestPoints.gte(27)
+            },
+            unlocked(){
+                return hasMilestone("E",10)
+                            },
+        },
+        12: {
+            requirementDescription: "最佳中考分数达到 29 (12)",
+            effectDescription: "语文软上限再度削弱3%且延迟生效。解锁一个天赋技能，能够倍增阅读感悟获取。",
+            done() {
+                return player.E.bestPoints.gte(29)
+            },
+            unlocked(){
+                return hasMilestone("E",11)
+                            },
+        },
+        13: {
+            requirementDescription: "最佳中考分数达到 32 (13)",
+            effectDescription: "阅读感悟获取再翻10倍，将所有的“基于最佳”统一为基于天赋技能1的最佳数值。获得一个免费的阅读感悟技能5等级。",
+            done() {
+                return player.E.bestPoints.gte(32)
+            },
+            unlocked(){
+                return hasMilestone("E",12)
+                            },
+        },
+        14: {
+            requirementDescription: "最佳中考分数达到 42 (14)",
+            effectDescription: "当前版本毕业！",
+            done() {
+                return player.E.bestPoints.gte(42)
+            },
+            unlocked(){
+                return hasMilestone("E",13)
+                            },
+        },
     },
+
 
     layerShown() { return true },          // Returns a bool for if this layer's node should be visible in the tree.
 
@@ -1713,7 +2155,7 @@ return hasMilestone("E",2)
         return display;
     },
     unlocked() { return true }, 
-    canAfford() { return player.E.inChinese.gte(1)},
+    canAfford() { return player.E.inChinese.gte(1)&&player.E.inZuowen.lt(1)},
     buy() { 
     player.E.inChinese = new Decimal(0)  
     player.E.points = player.E.points.add(player.E.Chinese)
@@ -1736,7 +2178,7 @@ return hasMilestone("E",2)
         let display = ("完成你"+player.E.year+"年的中考旅程，并且查询中考分数。你所有科目的对错题情况也会揭晓。<br>*确保你已完成您所有已解锁科目的考试，再点击此处完成中考！")
         return display;
     },
-    unlocked() { return player.E.inExam.gte(1)&&player.E.completedExam.lt(1) }, 
+    unlocked() { return player.E.inExam.gte(1)&&player.E.completedExam.lt(1)&&player.E.inZuowen.lt(1) }, 
     canAfford() { return true},
     buy() { 
     player.E.completedExam = new Decimal(1)  
@@ -2054,7 +2496,7 @@ return hasMilestone("E",2)
 },
     display() { // Everything else displayed in the buyable button after the title
         let data = tmp[this.layer].buyables[this.id]
-        let display = ("总结考试经验，记录考试成绩，备战"+player.E.year.add(1)+"年的中考！<br>Tips:点击*1次(多点后果自负！)*此按钮之后等待约5秒后刷新页面并点击【Main】以继续游戏")
+        let display = ("总结考试经验，记录考试成绩，备战"+player.E.year.add(1)+"年的中考！")
         return display;
     },
     unlocked() { return player.E.inExam.gte(1) }, 
@@ -2067,9 +2509,8 @@ return hasMilestone("E",2)
     player.E.inExam = new Decimal(0)
     if(tmp.E.Rank.lt(player.E.rank)) player.E.rank = tmp.E.Rank
     if(player.E.points.gte(player.E.bestPoints)) player.E.bestPoints = player.E.points
-    player.E.Chinese = new Decimal(0)
-    player.E.points = new Decimal(0)
     player.E.completedExam = new Decimal(0)
+    player.E.completedZuowen = new Decimal(0)
     player.E.freeze = new Decimal(360)
     examReset()
     },
@@ -2558,13 +2999,1081 @@ return time
     else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "100px", width: "134px"}},
     autoed() { return false},
 },
+78: {
+    title(){return "<h2>六、作文<h2>"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        let display = ("本大题共1小题，共50分。")
+        return display;
+    },
+    unlocked() { return hasMilestone("E",10) }, 
+    canAfford() { return false},
+    buy() { 
+         
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "60px", width: "600px"}},
+    autoed() { return false},
+},
+79: {
+    title(){return "40分钟作文"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "花费40分钟完成考场作文。花费时间的多少将会直接影响作文成品的质量！"
+        return display;
+    },
+    time(){
+        let time = new Decimal(2400)
+        return time
+    },
+    unlocked() { return hasMilestone("E",10)&&player.E.completedZuowen.lt(1) }, 
+    canAfford() { return (!player.E.ChineseTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inChinese.gte(1)&&player.E.inZuowen.lt(1)&&player.E.completedZuowen.lt(1)},
+    buy() { 
+    player.E.ChineseTime = player.E.ChineseTime.sub(this.time())
+    player.E.zuowenTime = new Decimal(2400)
+    if(player.E.random.lt(1)) player.E.ccRandom0 = new Decimal(1),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(30),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(2)) player.E.ccRandom0 = new Decimal(2),player.E.luoji = new Decimal(15),player.E.wenbi = new Decimal(25),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(3)) player.E.ccRandom0 = new Decimal(3),player.E.luoji = new Decimal(30),player.E.wenbi = new Decimal(10),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(4)) player.E.ccRandom0 = new Decimal(4),player.E.luoji = new Decimal(20),player.E.wenbi = new Decimal(15),player.E.sixiang = new Decimal(20),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(5)) player.E.ccRandom0 = new Decimal(5),player.E.luoji = new Decimal(20),player.E.wenbi = new Decimal(15),player.E.sixiang = new Decimal(20),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(6)) player.E.ccRandom0 = new Decimal(6),player.E.luoji = new Decimal(15),player.E.wenbi = new Decimal(20),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(20)
+    else if(player.E.random.lt(7)) player.E.ccRandom0 = new Decimal(7),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(20),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(25)
+    else if(player.E.random.lt(8)) player.E.ccRandom0 = new Decimal(8),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(15),player.E.sixiang = new Decimal(20),player.E.xiangxiang = new Decimal(25)
+    else if(player.E.random.lt(9)) player.E.ccRandom0 = new Decimal(9),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(10),player.E.sixiang = new Decimal(25),player.E.xiangxiang = new Decimal(25)
+    else player.E.ccRandom0 = new Decimal(9),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(10),player.E.sixiang = new Decimal(30),player.E.xiangxiang = new Decimal(20)
+    player.E.ccRandom1 = player.E.random
+    player.E.ccRandom2 = player.E.random
+    player.E.inZuowen = new Decimal(1)
+    player.E.ccSelected1 = tmp.E.cclim1
+    player.E.ccSelected2 = tmp.E.cclim2
+    
+    
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+80: {
+    title(){return "50分钟作文"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "花费50分钟完成考场作文。花费时间的多少将会直接影响作文成品的质量！"
+        return display;
+    },
+    time(){
+        let time = new Decimal(3000)
+        return time
+    },
+    unlocked() { return hasMilestone("E",10)&&player.E.completedZuowen.lt(1) }, 
+    canAfford() { return (!player.E.ChineseTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inChinese.gte(1)&&player.E.inZuowen.lt(1)&&player.E.completedZuowen.lt(1)},
+    buy() { 
+    player.E.ChineseTime = player.E.ChineseTime.sub(this.time())
+    player.E.zuowenTime = new Decimal(3000)
+    if(player.E.random.lt(1)) player.E.ccRandom0 = new Decimal(1),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(30),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(2)) player.E.ccRandom0 = new Decimal(2),player.E.luoji = new Decimal(15),player.E.wenbi = new Decimal(25),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(3)) player.E.ccRandom0 = new Decimal(3),player.E.luoji = new Decimal(30),player.E.wenbi = new Decimal(10),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(4)) player.E.ccRandom0 = new Decimal(4),player.E.luoji = new Decimal(20),player.E.wenbi = new Decimal(15),player.E.sixiang = new Decimal(20),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(5)) player.E.ccRandom0 = new Decimal(5),player.E.luoji = new Decimal(20),player.E.wenbi = new Decimal(15),player.E.sixiang = new Decimal(20),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(6)) player.E.ccRandom0 = new Decimal(6),player.E.luoji = new Decimal(15),player.E.wenbi = new Decimal(20),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(20)
+    else if(player.E.random.lt(7)) player.E.ccRandom0 = new Decimal(7),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(20),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(25)
+    else if(player.E.random.lt(8)) player.E.ccRandom0 = new Decimal(8),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(15),player.E.sixiang = new Decimal(20),player.E.xiangxiang = new Decimal(25)
+    else if(player.E.random.lt(9)) player.E.ccRandom0 = new Decimal(9),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(10),player.E.sixiang = new Decimal(25),player.E.xiangxiang = new Decimal(25)
+    else player.E.ccRandom0 = new Decimal(10),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(10),player.E.sixiang = new Decimal(30),player.E.xiangxiang = new Decimal(20)
+    player.E.ccRandom1 = player.E.random
+    player.E.ccRandom2 = player.E.random
+    player.E.inZuowen = new Decimal(1)
+    player.E.ccSelected1 = tmp.E.cclim1
+    player.E.ccSelected2 = tmp.E.cclim2
+    
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+81: {
+    title(){return "60分钟作文"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "花费60分钟完成考场作文。花费时间的多少将会直接影响作文成品的质量！"
+        return display;
+    },
+    time(){
+        let time = new Decimal(3600)
+        return time
+    },
+    unlocked() { return hasMilestone("E",10)&&player.E.completedZuowen.lt(1) }, 
+    canAfford() { return (!player.E.ChineseTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inChinese.gte(1)&&player.E.inZuowen.lt(1)&&player.E.completedZuowen.lt(1)},
+    buy() { 
+    player.E.ChineseTime = player.E.ChineseTime.sub(this.time())
+    player.E.zuowenTime = new Decimal(3600)
+    if(player.E.random.lt(1)) player.E.ccRandom0 = new Decimal(1),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(30),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(2)) player.E.ccRandom0 = new Decimal(2),player.E.luoji = new Decimal(15),player.E.wenbi = new Decimal(25),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(3)) player.E.ccRandom0 = new Decimal(3),player.E.luoji = new Decimal(30),player.E.wenbi = new Decimal(10),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(4)) player.E.ccRandom0 = new Decimal(4),player.E.luoji = new Decimal(20),player.E.wenbi = new Decimal(15),player.E.sixiang = new Decimal(20),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(5)) player.E.ccRandom0 = new Decimal(5),player.E.luoji = new Decimal(20),player.E.wenbi = new Decimal(15),player.E.sixiang = new Decimal(20),player.E.xiangxiang = new Decimal(15)
+    else if(player.E.random.lt(6)) player.E.ccRandom0 = new Decimal(6),player.E.luoji = new Decimal(15),player.E.wenbi = new Decimal(20),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(20)
+    else if(player.E.random.lt(7)) player.E.ccRandom0 = new Decimal(7),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(20),player.E.sixiang = new Decimal(15),player.E.xiangxiang = new Decimal(25)
+    else if(player.E.random.lt(8)) player.E.ccRandom0 = new Decimal(8),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(15),player.E.sixiang = new Decimal(20),player.E.xiangxiang = new Decimal(25)
+    else if(player.E.random.lt(9)) player.E.ccRandom0 = new Decimal(9),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(10),player.E.sixiang = new Decimal(25),player.E.xiangxiang = new Decimal(25)
+    else player.E.ccRandom0 = new Decimal(9),player.E.luoji = new Decimal(10),player.E.wenbi = new Decimal(10),player.E.sixiang = new Decimal(30),player.E.xiangxiang = new Decimal(20)
+    player.E.ccRandom1 = player.E.random
+    player.E.ccRandom2 = player.E.random
+    player.E.inZuowen = new Decimal(1)
+    player.E.ccSelected1 = tmp.E.cclim1
+    player.E.ccSelected2 = tmp.E.cclim2
+    
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+82: {
+    title(){return "<h3>逻辑："+player.E.luoji},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        let display = ("")
+        return display;
+    },
+    unlocked() { return true }, 
+    canAfford() { return false},
+    buy() { 
+    player.E.completedExam = new Decimal(1)  
+    player.E.inChinese = new Decimal(0) 
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#379350", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "3px", height: "30px", width: "150px"}},
+    autoed() { return false},
+},
+83: {
+    title(){return "<h3>文笔："+player.E.wenbi},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        let display = ("")
+        return display;
+    },
+    unlocked() { return true }, 
+    canAfford() { return false},
+    buy() { 
+    player.E.completedExam = new Decimal(1)  
+    player.E.inChinese = new Decimal(0) 
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#CC0000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "3px", height: "30px", width: "150px"}},
+    autoed() { return false},
+},
+84: {
+    title(){return "<h3>思想："+player.E.sixiang},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        let display = ("")
+        return display;
+    },
+    unlocked() { return true }, 
+    canAfford() { return false},
+    buy() { 
+    player.E.completedExam = new Decimal(1)  
+    player.E.inChinese = new Decimal(0) 
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#AAAA00", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FFFF00",'border-radius': "3px", height: "30px", width: "150px"}},
+    autoed() { return false},
+},
+85: {
+    title(){return "<h3>想象："+player.E.xiangxiang},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        let display = ("")
+        return display;
+    },
+    unlocked() { return true }, 
+    canAfford() { return false},
+    buy() { 
+    player.E.completedExam = new Decimal(1)  
+    player.E.inChinese = new Decimal(0) 
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#601EDC", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#702FED",'border-radius': "3px", height: "30px", width: "150px"}},
+    autoed() { return false},
+},
+86: {
+    title(){return "<h2>=-=-=作文专用答题卡=-=-=<h2>"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        if(player.E.ccRandom0 == 1)display = "<h3>作文题目：葡萄酸<br>"
+        if(player.E.ccRandom0 == 2)display = "<h3>作文题目：再见与不见<br>"
+        if(player.E.ccRandom0 == 3)display = "<h3>作文题目：桥<br>"
+        if(player.E.ccRandom0 == 4)display = "<h3>作文题目：向日葵与阳光<br>"
+        if(player.E.ccRandom0 == 5)display = "<h3>作文题目：旅途<br>"
+        if(player.E.ccRandom0 == 6)display = "<h3>作文题目：庄周蝴蝶<br>"
+        if(player.E.ccRandom0 == 7)display = "<h3>作文题目：义气与正义<br>"
+        if(player.E.ccRandom0 == 8)display = "<h3>作文题目：盲人与心眼<br>"
+        if(player.E.ccRandom0 == 9)display = "<h3>作文题目：故乡<br>"
+        if(player.E.ccRandom0 == 10)display = "<h3>作文题目：救赎与拯救<br>"
+        subdisplay = "要求：①请正确填写此作文专用答题卡上的个人信息；②立意自定，文休自选（诗歌除外）；③文中不要出现真实的地各、校名、人名；④书写工整．不少于600字。"
+        return display + subdisplay;
+    },
+    unlocked() { return hasMilestone("E",10) }, 
+    canAfford() { return false},
+    buy() { 
+         
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "120px", width: "600px"}},
+    autoed() { return false},
+},
+87: {
+    title(){return "<h3>请选择您的作文题材!<h3>"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "暂时能想到符合题意的，也只有这些题材了。。。(品质越高的题材，一般越难成功运用！)"
+        return display
+    },
+    unlocked() { return hasMilestone("E",10) }, 
+    canAfford() { return false},
+    buy() { 
+         
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "60px", width: "600px"}},
+    autoed() { return false},
+},
+88: {
+    title(){return "(Common) 坚强"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：思想+10 文笔+5"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "<br>(已选择)"
+        return display;
+    },
+    unlocked() { return player.E.inZuowen.gte(1) }, 
+    canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+    player.E.sixiang = player.E.sixiang.add(10)
+    player.E.wenbi = player.E.wenbi.add(5)
+    player.E.ccSelected1 = player.E.ccSelected1.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#CCCCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#FFFFFF",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#CCCCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+89: {
+    title(){return "(Common) 家庭"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：文笔+10 想象+5"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "(已选择)"
+        return display;
+    },
+    unlocked() { return player.E.inZuowen.gte(1) }, 
+    canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+    player.E.xiangxiang = player.E.xiangxiang.add(5)
+    player.E.wenbi = player.E.wenbi.add(10)
+    player.E.ccSelected1 = player.E.ccSelected1.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#CCCCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#FFFFFF",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#CCCCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+90: {
+    title(){return "(Common) 生活"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：文笔+5 思想+5 逻辑+5"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "(已选择)"
+        return display;
+    },
+    unlocked() { return player.E.inZuowen.gte(1) }, 
+    canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+    player.E.sixiang = player.E.sixiang.add(5)
+    player.E.wenbi = player.E.wenbi.add(5)
+    player.E.luoji = player.E.luoji.add(5)
+    player.E.ccSelected1 = player.E.ccSelected1.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#CCCCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#FFFFFF",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#CCCCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+101: {
+    title(){return "(Uncommon) 反驳"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：逻辑+30 想象-5"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "(已选择)"
+        return display;
+    },
+    unlocked() { return getBuyableAmount("Exp",54).gte(1)&&player.E.ccRandom1.gte(0)&&player.E.inZuowen.gte(1) }, 
+    canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+    player.E.xiangxiang = player.E.xiangxiang.sub(5)
+    player.E.luoji = player.E.luoji.add(30)
+    player.E.ccSelected1 = player.E.ccSelected1.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+102: {
+    title(){return "(Uncommon) 心情"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：想象+15 文笔+10"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "(已选择)"
+        return display;
+    },
+    unlocked() { return getBuyableAmount("Exp",54).gte(2)&&player.E.ccRandom1.gte(1)&&player.E.ccRandom1.lt(9)&&player.E.inZuowen.gte(1) }, 
+    canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+    player.E.xiangxiang = player.E.xiangxiang.add(15)
+    player.E.wenbi = player.E.wenbi.add(10)
+    player.E.ccSelected1 = player.E.ccSelected1.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+103: {
+    title(){return "(Uncommon) 教训"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：思想+15 逻辑+10"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "(已选择)"
+        return display;
+    },
+    unlocked() { return getBuyableAmount("Exp",54).gte(3)&&player.E.ccRandom1.gte(0)&&player.E.ccRandom1.lt(10)&&player.E.inZuowen.gte(1) }, 
+    canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+    player.E.sixiang = player.E.sixiang.add(15)
+    player.E.luoji = player.E.luoji.add(10)
+    player.E.ccSelected1 = player.E.ccSelected1.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+104: {
+    title(){return "(Uncommon)风景"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：想象+15 文笔+10 思想+5"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "(已选择)"
+        return display;
+    },
+    unlocked() { return getBuyableAmount("Exp",54).gte(4)&&player.E.ccRandom1.gte(0)&&player.E.inZuowen.gte(1) }, 
+    canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+    player.E.xiangxiang = player.E.xiangxiang.add(15)
+    player.E.wenbi = player.E.wenbi.add(10)
+    player.E.sixiang = player.E.sixiang.add(5)
+    player.E.ccSelected1 = player.E.ccSelected1.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+105: {
+    title(){return "(Uncommon)独立意识"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：逻辑+15 文笔+10 思想+5"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "(已选择)"
+        return display;
+    },
+    unlocked() { return getBuyableAmount("Exp",54).gte(5)&&player.E.ccRandom1.gte(0)&&player.E.ccRandom1.lt(10)&&player.E.inZuowen.gte(1) }, 
+    canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+        player.E.luoji = player.E.luoji.add(15)
+        player.E.wenbi = player.E.wenbi.add(10)
+        player.E.sixiang = player.E.sixiang.add(5)
+    player.E.ccSelected1 = player.E.ccSelected1.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+91: {
+    title(){return "<h3>请选择您的写作风格!<h3>"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "接下来，我这次要用什么风格写作呢？(品质越高的风格，一般越难成功运用！)"
+        return display
+    },
+    unlocked() { return player.E.ccSelected1.lt(1) }, 
+    canAfford() { return false},
+    buy() { 
+         
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "60px", width: "600px"}},
+    autoed() { return false},
+},
+92: {
+    title(){return "(Common) 简洁"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：文笔^1.1 逻辑^1.05"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "<br>(已选择)"
+        return display;
+    },
+    unlocked() { return player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1) }, 
+    canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+    player.E.luoji = player.E.luoji.pow(1.05).floor()
+    player.E.wenbi = player.E.wenbi.pow(1.1).floor()
+    player.E.ccSelected2 = player.E.ccSelected2.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#CCCCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#FFFFFF",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#CCCCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+93: {
+    title(){return "(Common) 含蓄"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：文笔^1.05 思想^1.1"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "<br>(已选择)"
+        return display;
+    },
+    unlocked() { return player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1) }, 
+    canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+    player.E.sixiang = player.E.sixiang.pow(1.1).floor()
+    player.E.wenbi = player.E.wenbi.pow(1.05).floor()
+    player.E.ccSelected2 = player.E.ccSelected2.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#CCCCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#FFFFFF",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#CCCCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+94: {
+    title(){return "(Common) 明快"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：思想^1.05 想象^1.1"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "<br>(已选择)"
+        return display;
+    },
+    unlocked() { return player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1) }, 
+    canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+    player.E.sixiang = player.E.sixiang.pow(1.05).floor()
+    player.E.xiangxiang = player.E.xiangxiang.pow(1.1).floor()
+    player.E.ccSelected2 = player.E.ccSelected2.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#CCCCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#FFFFFF",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#CCCCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+95: {
+    title(){return ">>>开始写作！<<<"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "开始完成您的作文。您作文的当前属性将会影响作文成品的最终质量！"
+        return display;
+    },
+    unlocked() { return player.E.ccSelected2.lt(1) }, 
+    canAfford() { return getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    player.E.luojiMult = player.E.luoji
+    player.E.wenbiMult = player.E.wenbi
+    player.E.sixiangMult = player.E.sixiang
+    player.E.xiangxiangMult = player.E.xiangxiang
+    player.E.startedZuowen = new Decimal(1)
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if (getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "60px", width: "600px"}
+    if (getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "60px", width: "600px"}},
+    autoed() { return false},
+
+},
+96: {
+    title: "继续",
+    gain() { 
+    let gain = new Decimal(1)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        let display = ("")
+        return display;
+    },
+    unlocked(){
+    return player.E.completedZuowen.gte(1)&&player.E.story.lt(3)&&player.E.inZuowen.gte(1)},
+    canAfford() { return true },
+    buy() { 
+        player.E.story = player.E.story.add(1)
+    
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-radius': "10px", height: "50px", width: "100px"}},
+    autoed() { return false},
+},
+97: {
+    title(){return "<h3>作文总质量："+player.E.ccPoints},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        if(player.E.ccPoints.lt(10000))display = "作文体量不足200字，语句不通顺，结构不完整，错别字较多，内容简单，没有中心，不知所云。且字迹潦草，辨识困难，实属废纸之作。"
+        else if(player.E.ccPoints.lt(100000))display = "作文体量300字，语句通顺性、结构完整性较为欠缺，错别字较多，句子表达不完整，有语病，文章层次不清楚。且字迹潦草，辨识困难，实为下等之作。"
+        else if(player.E.ccPoints.lt(1000000))display = "作文体量500字，语句通顺性、结构完整性尚可，有错别字，部分句子表达不完整，有语病，文章层次不清楚，实为中下之作。"
+        return display;
+    },
+    unlocked() { return player.E.story.gte(1) }, 
+    canAfford() { return false},
+    buy() { 
+    player.E.completedExam = new Decimal(1)  
+    player.E.inChinese = new Decimal(0) 
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.ccPoints.lt(10000)) return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "100px", width: "400px"}
+    else if(player.E.ccPoints.lt(100000)) return {'background-color': "#00CCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FFFF",'border-radius': "10px", height: "100px", width: "400px"}
+    else if(player.E.ccPoints.lt(1000000)) return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "400px"}},
+    autoed() { return false},
+},
+98: {
+    title(){return "<h3>作文评分："+tmp.E.ccScore+" / 50"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        let display = ("此作文得分将会计入您的语文中考总分！")
+        return display;
+    },
+    unlocked() { return player.E.story.gte(3) }, 
+    canAfford() { return false},
+    buy() { 
+    player.E.completedExam = new Decimal(1)  
+    player.E.inChinese = new Decimal(0) 
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#CCCCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#FFFFFF",'border-radius': "10px", height: "100px", width: "500px"}},
+    autoed() { return false},
+},
+99: {
+    title(){return "<h3>作文评级"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        if(player.E.ccPoints.lt(10000))display = "<h1>False"
+        else if(player.E.ccPoints.lt(20000))display = "<h1>C"
+        else if(player.E.ccPoints.lt(50000))display = "<h1>C+"
+        else if(player.E.ccPoints.lt(100000))display = "<h1>C++"
+        else if(player.E.ccPoints.lt(1000000))display = "<h1>B"
+        return display;
+    },
+    unlocked() { return player.E.story.gte(2) }, 
+    canAfford() { return false},
+    buy() { 
+    player.E.completedExam = new Decimal(1)  
+    player.E.inChinese = new Decimal(0) 
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.ccPoints.lt(10000)) return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "100px", height: "100px", width: "100px"}
+    else if(player.E.ccPoints.lt(100000)) return {'background-color': "#00CCCC", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FFFF",'border-radius': "100px", height: "100px", width: "100px"}
+    else if(player.E.ccPoints.lt(1000000)) return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "100px", height: "100px", width: "100px"}},
+    autoed() { return false},
+},
+100: {
+    title(){return "结束"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "结束本次试卷的作文部分。继续完成试卷其他题目！"
+        return display;
+    },
+    unlocked() { return player.E.story.gte(3) }, 
+    canAfford() { return getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    player.E.wenbi = new Decimal(0)
+    player.E.wenbiMult = new Decimal(0)
+    player.E.luoji = new Decimal(0)
+    player.E.luojiMult = new Decimal(0)
+    player.E.sixiang = new Decimal(0)
+    player.E.sixiangMult = new Decimal(0)
+    player.E.xiangxiang = new Decimal(0)
+    player.E.xiangxiangMult = new Decimal(0)
+    player.E.Chinese = player.E.Chinese.add(tmp.E.ccScore)
+    if(tmp.E.ccScore.gte(player.E.ccBest)) player.E.ccBest = tmp.E.ccScore
+    player.E.ccPoints = new Decimal(0)
+    player.E.inZuowen = new Decimal(0)
+    player.E.story = new Decimal(0)
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if (getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "60px", width: "600px"}
+    if (getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "60px", width: "600px"}},
+    autoed() { return false},
+
+},
+106: {
+    title(){return "<h2>五、(一)综合性学习<h2>"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        let display = ("本大题共3小题，共5分。")
+        return display;
+    },
+    unlocked() { return hasMilestone("C",5) }, 
+    canAfford() { return false},
+    buy() { 
+         
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "60px", width: "600px"}},
+    autoed() { return false},
+},
+107: {
+    title(){return "(2分) T20：材料阅读-Easy"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "推荐语文知识：1e80<br>正确概率："+format(this.chance())+"%<br>预计耗时："+format(this.time())+"s<br>点击以解题！"
+        return display;
+    },
+    chance(){
+        if(!player.C.points.gte("1e20")) chs = new Decimal(0.001)
+        if(player.C.points.gte("1e20")&&!player.C.points.gte("1e40")) chs = new Decimal(0.1)
+        if(player.C.points.gte("1e40")&&!player.C.points.gte("1e60")) chs = new Decimal(1)
+        if(player.C.points.gte("1e60")&&!player.C.points.gte("1e80")) chs = new Decimal(5)
+        if(player.C.points.gte("1e80")) chs = player.C.points.log10().div(150).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) chs = chs.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) chs = chs.mul(1.3).min(100)
+        return chs
+    },
+    time(){
+        let time = new Decimal(1000)
+        if(player.C.points.gte("1e20")) time = time.sub(300)
+        if(player.C.points.gte("1e50")) time = time.sub(200)
+        if(player.C.points.gte("1e80")) time = time.sub(100)
+        if(player.C.points.gte("1e160")) time = time.sub(100)
+        if(player.C.points.gte("1e320")) time = time.sub(100)
+        if(player.C.points.gte("1e640")) time = time.sub(100)
+        if(player.C.points.gte("1e1280")) time = time.sub(50)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return hasMilestone("C",5) }, 
+    canAfford() { return (!player.E.ChineseTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inChinese.gte(1)},
+    buy() { 
+    player.E.ChineseTime = player.E.ChineseTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.Chinese = player.E.Chinese.add(2)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "100px", width: "200px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "100px", width: "200px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "100px", width: "200px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+108: {
+    title(){return "(3分) T21：材料阅读-Hard"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "推荐语文知识：1e8000<br>正确概率："+format(this.chance())+"%<br>预计耗时："+format(this.time())+"s<br>点击以解题！"
+        return display;
+    },
+    chance(){
+        if(!player.C.points.gte("1e2000")) chs = new Decimal(0.001)
+        if(player.C.points.gte("1e2000")&&!player.C.points.gte("1e4000")) chs = new Decimal(0.1)
+        if(player.C.points.gte("1e4000")&&!player.C.points.gte("1e6000")) chs = new Decimal(1)
+        if(player.C.points.gte("1e6000")&&!player.C.points.gte("1e8000")) chs = new Decimal(5)
+        if(player.C.points.gte("1e8000")) chs = player.C.points.log10().div(150).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) chs = chs.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) chs = chs.mul(1.3).min(100)
+        return chs
+    },
+    time(){
+        let time = new Decimal(1000)
+        if(player.C.points.gte("1e2000")) time = time.sub(300)
+        if(player.C.points.gte("1e5000")) time = time.sub(200)
+        if(player.C.points.gte("1e8000")) time = time.sub(100)
+        if(player.C.points.gte("1e16000")) time = time.sub(100)
+        if(player.C.points.gte("1e32000")) time = time.sub(100)
+        if(player.C.points.gte("1e64000")) time = time.sub(100)
+        if(player.C.points.gte("1e128000")) time = time.sub(50)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return hasMilestone("C",5) }, 
+    canAfford() { return (!player.E.ChineseTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inChinese.gte(1)},
+    buy() { 
+    player.E.ChineseTime = player.E.ChineseTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.Chinese = player.E.Chinese.add(3)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "100px", width: "200px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "100px", width: "200px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "100px", width: "200px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+109: {
+    title(){return "(Uncommon)婉约细腻"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：文笔^1.2 想象^1.05"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "(已选择)"
+        return display;
+    },
+    unlocked() { return getBuyableAmount("Exp",61).gte(1)&&player.E.ccRandom2.gte(0)&&player.E.ccRandom2.lt(9)&&player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1) }, 
+    canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+        player.E.wenbi = player.E.wenbi.pow(1.2).floor()
+        player.E.xiangxiang = player.E.xiangxiang.pow(1.05).floor()
+    player.E.ccSelected2 = player.E.ccSelected2.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+110: {
+    title(){return "(Uncommon)豪放不羁"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：逻辑^1.2 思想^1.05"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "(已选择)"
+        return display;
+    },
+    unlocked() { return getBuyableAmount("Exp",61).gte(2)&&player.E.ccRandom2.gte(0)&&player.E.ccRandom2.lt(10)&&player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1) }, 
+    canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+        player.E.luoji = player.E.luoji.pow(1.2).floor()
+        player.E.sixiang = player.E.sixiang.pow(1.05).floor()
+    player.E.ccSelected2 = player.E.ccSelected2.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+111: {
+    title(){return "(Uncommon)虚实相生"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：逻辑^1.2 想象^1.1"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "(已选择)"
+        return display;
+    },
+    unlocked() { return getBuyableAmount("Exp",61).gte(3)&&player.E.ccRandom2.gte(0)&&player.E.ccRandom2.lt(10)&&player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1) }, 
+    canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+        player.E.luoji = player.E.luoji.pow(1.2).floor()
+        player.E.xiangxiang = player.E.xiangxiang.pow(1.1).floor()
+    player.E.ccSelected2 = player.E.ccSelected2.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+112: {
+    title(){return "(Uncommon)华丽炫技"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：文笔^1.25 思想^0.9"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "(已选择)"
+        return display;
+    },
+    unlocked() { return getBuyableAmount("Exp",61).gte(4)&&player.E.ccRandom2.gte(0)&&player.E.ccRandom2.lt(10)&&player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1)}, 
+    canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+        player.E.wenbi = player.E.wenbi.pow(1.25).floor()
+        player.E.sixiang = player.E.sixiang.pow(0.9).floor()
+    player.E.ccSelected2 = player.E.ccSelected2.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+113: {
+    title(){return "(Uncommon)独辟蹊径"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "点击以选定您的作文题材！<br>题材效果：文笔^1.1 逻辑^1.1 想象^1.1"
+        if(getBuyableAmount(this.layer,this.id).gte(1)) display += "(已选择)"
+        return display;
+    },
+    unlocked() { return getBuyableAmount("Exp",61).gte(4)&&player.E.ccRandom2.gte(0)&&player.E.ccRandom2.lt(10)&&player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1) }, 
+    canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
+    buy() { 
+        player.E.wenbi = player.E.wenbi.pow(1.1).floor()
+        player.E.luoji = player.E.luoji.pow(1.1).floor()
+        player.E.xiangxiang = player.E.xiangxiang.pow(1.1).floor()
+    player.E.ccSelected2 = player.E.ccSelected2.sub(1)
+    setBuyableAmount(this.layer,this.id,new Decimal(1))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}
+    if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+
     },
     Rank(){
 return new Decimal(109123).sub(player.E.points.mul(10))
     },
+    ccScore()
+    {
+if(player.E.ccPoints.lt(10000)) score = player.E.ccPoints.div(1000).floor()
+else if(player.E.ccPoints.lt(100000)) score = new Decimal(10).add(player.E.ccPoints.div(10000).floor())
+else if(player.E.ccPoints.lt(1000000)) score = new Decimal(20).add(player.E.ccPoints.div(100000).floor())
+return score
+    },
+    ccFreeze()
+    {
+let freeze = new Decimal(10)
+if(getBuyableAmount("C",59).gte(1)) freeze = freeze.sub(buyableEffect("C",59))
+return freeze
+    },
     update(diff)
     {
         player.E.random = new Decimal(Math.random()*10)
+        if(player.E.startedZuowen.gte(1)&&player.E.ccFreeze.lt(1)&&player.E.random.lt(2.5)) player.E.ccFreeze = tmp.E.ccFreeze, player.E.luoji = player.E.luoji.add(player.E.random.mul(6).mul(player.E.luojiMult)).floor()
+        if(player.E.startedZuowen.gte(1)&&player.E.ccFreeze.lt(1)&&player.E.random.gte(2.5)&&player.E.random.lt(5)) player.E.ccFreeze = tmp.E.ccFreeze, player.E.wenbi = player.E.wenbi.add(player.E.random.mul(3).mul(player.E.wenbiMult)).floor()
+        if(player.E.startedZuowen.gte(1)&&player.E.ccFreeze.lt(1)&&player.E.random.gte(5)&&player.E.random.lt(7.5)) player.E.ccFreeze = tmp.E.ccFreeze, player.E.sixiang = player.E.sixiang.add(player.E.random.mul(2).mul(player.E.sixiangMult)).floor()
+        if(player.E.startedZuowen.gte(1)&&player.E.ccFreeze.lt(1)&&player.E.random.gte(7.5)&&player.E.random.lt(10)) player.E.ccFreeze = tmp.E.ccFreeze, player.E.xiangxiang = player.E.xiangxiang.add(player.E.random.mul(player.E.xiangxiangMult)).floor()
+        if(player.E.startedZuowen.gte(1)) player.E.ccFreeze = player.E.ccFreeze.sub(1),player.E.zuowenTime = player.E.zuowenTime.sub(5)
+        if(player.E.zuowenTime.lte(0)&&player.E.inZuowen.gte(1)) player.E.startedZuowen = new Decimal(0), player.E.completedZuowen = new Decimal(1),player.E.ccPoints = player.E.luoji.add(player.E.wenbi).add(player.E.sixiang).add(player.E.xiangxiang)
         if(player.E.freeze.gt(0))player.E.freeze = player.E.freeze.sub(new Decimal(5).mul(diff))
         if(player.E.freeze.lt(0))player.E.freeze = new Decimal(0)
     },
@@ -2612,12 +4121,51 @@ return new Decimal(109123).sub(player.E.points.mul(10))
     ["row",[["buyable",68],["buyable",69]]],
     ["row",[["buyable",70],["buyable",71],["buyable",72]]],
     ["row",[["buyable",74],["buyable",75],["buyable",76],["buyable",77]]],
+    ["row",[["buyable",106]]],
+    ["row",[["buyable",107],["buyable",108]]],
+    ["row",[["buyable",78]]],
+    ["row",[["buyable",79],["buyable",80],["buyable",81]]],
+    
     ["buyable",51],
     
     ],
     buttonStyle: {"border-color": "#888888","background-color": "#666666"},  
     style:{"background-color":"#222222"},
     unlocked(){return player.E.inExam.gte(1)}
+},
+"ChineseComposition":{
+    content:[
+        ["row",[["buyable",82],["buyable",83],["buyable",84],["buyable",85]]],
+        ["display-text",
+        function() {return "您的作文剩余时间(以秒计):<h2 style='color:#888888;text-shadow:0px 0px 10px;'> "+ format(player.E.zuowenTime)},
+        {}],
+        "blank",
+        ["display-text",
+        function() {return "剩余可选作文题材:<h2 style='color:#888888;text-shadow:0px 0px 10px;'> "+ player.E.ccSelected1 +" / "+tmp.E.cclim1},
+        {}],
+        "blank",
+        ["display-text",
+        function() {return "剩余可选作文风格:<h2 style='color:#888888;text-shadow:0px 0px 10px;'> "+ player.E.ccSelected2 +" / "+tmp.E.cclim2},
+        {}],
+        ["row",[["buyable",86]]],
+        ["row",[["buyable",87]]],
+        ["row",[["buyable",88],["buyable",89],["buyable",90]]],
+        ["row",[["buyable",101],["buyable",102],["buyable",103]]],
+        ["row",[["buyable",104],["buyable",105]]],
+        ["row",[["buyable",91]]],
+        ["row",[["buyable",92],["buyable",93],["buyable",94]]],
+        ["row",[["buyable",109],["buyable",110],["buyable",111]]],
+        ["row",[["buyable",112],["buyable",113]]],
+        ["row",[["buyable",95]]],
+        ["row",[["buyable",97],["buyable",99]]],
+        ["row",[["buyable",98]]],
+        ["row",[["buyable",96]]],
+        ["row",[["buyable",100]]],
+    
+    ],
+    buttonStyle: {"border-color": "#888888","background-color": "#666666"},  
+    style:{"background-color":"#222222"},
+    unlocked(){return player.E.inZuowen.gte(1)}
 },
 "Score":{
     content:[
@@ -8834,7 +10382,16 @@ addLayer("Exp", {
         best11: new Decimal(0),
         best12: new Decimal(0),
         best21: new Decimal(0),
+        best22: new Decimal(0),
         freepp: new Decimal(0),
+        treepp: new Decimal(0),
+        balanceTicai: new Decimal(10),
+        bought55: false,
+        bought56: false,
+        bought58: false,
+        bought59: false,
+        bought60: false,
+        bought62: false,
                      // "points" is the internal name for the main resource of the layer.
     }},
     requires: new Decimal(5),
@@ -8862,11 +10419,21 @@ addLayer("Exp", {
     expMult(){
 let mult = new Decimal(1)
 if(getBuyableAmount("C",43).gte(1)) mult = mult.mul(buyableEffect("C",43))
+if(getBuyableAmount("Exp",55).gte(1)) mult = mult.mul(buyableEffect("Exp",55))
+if(player.C.total2.gte(1)) mult = mult.mul(tmp.C.effect2)
+if((getBuyableAmount("Exp",59)).gte(1)) mult = mult.mul(buyableEffect("Exp",59))
 return mult
     },
+    maxBalance()
+{
+    let max = new Decimal(10)
+    return max
+},
     limit()
     {
         let lim = new Decimal(10).mul(new Decimal(2).pow(player.Exp.level.add(1)))
+        if (lim.gte(1e12)) lim = lim.mul(new Decimal(2).pow(player.Exp.level.sub(35)))
+        if((getBuyableAmount("Exp",60)).gte(1)) lim = lim.div(buyableEffect("Exp",60))
         return lim
     },
     infoboxes: {
@@ -8909,6 +10476,7 @@ return mult
         if((getBuyableAmount("Exp",11)).gte(player.Exp.best11)) player.Exp.best11 = getBuyableAmount("Exp",11)
         if((getBuyableAmount("Exp",12)).gte(player.Exp.best12)) player.Exp.best12 = getBuyableAmount("Exp",12)
         if((getBuyableAmount("Exp",21)).gte(player.Exp.best21)) player.Exp.best21 = getBuyableAmount("Exp",21)
+        if((getBuyableAmount("Exp",57)).gte(player.Exp.best22)) player.Exp.best22 = getBuyableAmount("Exp",57)
     },
     effect()
     {
@@ -8948,7 +10516,7 @@ return mult
     {}],
     "blank",
     ["row",[["buyable",11],["buyable",12],["buyable",13]]],
-    ["row",[["buyable",21]]],
+    ["row",[["buyable",21],["buyable",57]]],
     ["row",[["buyable",41]]],
 ],
 unlocked(){return hasMilestone("E",3)},
@@ -8964,10 +10532,51 @@ unlocked(){return hasMilestone("E",3)},
     function() {return "您的所有天赋转换器一共为您提供了天赋点数 <h2 style='color:#6495ED;text-shadow:0px 0px 10px;'>+"+player.Exp.freepp+"<h2>"},
     {}],
     "blank",
-    ["row",[["buyable",51]]],
+    ["row",[["buyable",51],["buyable",52]]],
     
 ],
 unlocked(){return hasMilestone("E",7)},
+},
+"GeniusTree":{
+    content:[
+        "blank",
+
+        ["display-text",
+            function() {return "您当前拥有的天赋点为 <h2 style='color:#6495ED;text-shadow:0px 0px 10px;'>"+player.Exp.pp+"<h2>"},
+            {}],
+            ["display-text",
+            function() {return "Tips:黄色线段表示该研究需要上方所有连接的研究全部购买，白色线段则表示该研究需要上方所有连接的研究购买任意一项。"},
+            {}],
+            "blank",
+            ["row",[["buyable",53]]],
+            "blank",
+            "blank",
+            ["row",[["buyable",55]]],
+            "blank",
+            "blank",
+            ["row",[["buyable",56],["buyable",58]]],
+            "blank",
+            "blank",
+            ["row",[["buyable",59],["buyable",60]]],
+            "blank",
+            "blank",
+            ["row",[["buyable",62]]],
+            
+        ],
+        unlocked(){return hasMilestone("E",11)},
+        },
+"Muse":{
+    content:[
+"blank",
+
+["display-text",
+    function() {return "剩余作文题材容量：<h2 style='color:#6495ED;text-shadow:0px 0px 10px;'>"+player.Exp.balanceTicai+" / "+tmp.Exp.maxBalance },
+    {}],
+    "blank",
+    ["row",[["buyable",54],["buyable",61]]],
+    
+],
+unlocked(){return hasMilestone("E",11)},
 },
 },          // Returns a bool for if this layer's node should be visible in the tree.
 
@@ -8990,8 +10599,10 @@ unlocked(){return hasMilestone("E",7)},
           effect(x) { 
             let base = new Decimal(10000)
             if(hasUpgrade("C",31)) base = base.mul(upgradeEffect("C",31))
+            if(getBuyableAmount("Exp",62).gte(1)) base = base.mul(buyableEffect("Exp",62))
             if(!hasUpgrade("C",41))mult2 = base.pow(x)
-            if(hasUpgrade("C",41))mult2 = base.pow(player.Exp.best11)
+            if(hasUpgrade("C",41)&&!hasMilestone("E",13))mult2 = base.pow(player.Exp.best11)
+            if(hasMilestone("E",13))mult2 = base.pow(player.Exp.best11)
             return mult2},
           unlocked(){return hasMilestone("E",3)},
           style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
@@ -8999,7 +10610,7 @@ unlocked(){return hasMilestone("E",7)},
         12: {
             title: "技能2：语文知识获取",
             cost(x) {if(!hasMilestone("E",6))return new Decimal(2).pow(x)
-            if(hasMilestone("E",6)&&!hasMilestone("E",8))return new Decimal(2).pow((x).sub(1)).floor()
+            if(hasMilestone("E",6))return new Decimal(2).pow((x).sub(1)).floor()
             if(hasMilestone("E",8))return x},
             canAfford() { return player.Exp.pp.gte(this.cost())},
             buy() {
@@ -9014,7 +10625,8 @@ unlocked(){return hasMilestone("E",7)},
                 if(hasMilestone("E",5)) base = base.mul(2)
                 if((getBuyableAmount("C",42)).gte(1)) base = base.mul(buyableEffect("C",42))
                 if(!hasUpgrade("C",42))mult2 = base.pow(x)
-            if(hasUpgrade("C",42))mult2 = base.pow(player.Exp.best12)
+            if(hasUpgrade("C",42)&&!hasMilestone("E",13))mult2 = base.pow(player.Exp.best12)
+            if(hasMilestone("E",13))mult2 = base.pow(player.Exp.best11)
                 return new Decimal(mult2)},
             unlocked(){return hasMilestone("E",3)},
             style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
@@ -9034,7 +10646,8 @@ unlocked(){return hasMilestone("E",7)},
             effect(x) { 
                 let base = new Decimal(20)
                 if(hasUpgrade("C",33)) base = base.mul(upgradeEffect("C",33))
-                mult2 = base.pow(x)
+                if(!hasMilestone("E",13))mult2 = base.pow(x)
+                if(hasMilestone("E",13))mult2 = base.pow(player.Exp.best11)
                 return new Decimal(mult2)},
                 style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
             unlocked(){return hasMilestone("E",4)}
@@ -9054,11 +10667,13 @@ unlocked(){return hasMilestone("E",7)},
             effect(x) { 
                 let base = new Decimal(1)
                 if(!hasMilestone("E",9))mult2 = base.add(x)
-                if(hasMilestone("E",9))mult2 = base.add(player.Exp.best21)
+                if(hasMilestone("E",9)&&!hasMilestone("E",13))mult2 = base.add(player.Exp.best21)
+                if(hasMilestone("E",13))mult2 = base.add(player.Exp.best11)
                 return mult2},
                 style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
             unlocked(){return hasMilestone("E",6)}
           },
+          
           41: {
             title: "洗点",
             canAfford() { return true},
@@ -9067,7 +10682,9 @@ unlocked(){return hasMilestone("E",7)},
                setBuyableAmount("Exp",12,new Decimal(0))
                setBuyableAmount("Exp",13,new Decimal(0))
                setBuyableAmount("Exp",21,new Decimal(0))
-               player.Exp.pp = player.Exp.level.add(player.Exp.freepp)
+               setBuyableAmount("Exp",57,new Decimal(0))
+               
+               player.Exp.pp = player.Exp.level.add(player.Exp.freepp).sub(player.Exp.treepp)
             },
             display() {return `重置天赋技能并且返还您全部的天赋点数。`},
             effect(x) { 
@@ -9093,6 +10710,227 @@ unlocked(){return hasMilestone("E",7)},
               style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
             unlocked(){return hasMilestone("E",7)}
           },
+          52: {
+            title: "天赋转换器-作文质量",
+            canAfford() { return player.E.ccPoints.gte(this.cost())},
+            cost(x) {return new Decimal(2500).mul(new Decimal(2).pow(x))},
+            buy() {
+                player.Exp.freepp = player.Exp.freepp.add(1)
+                player.Exp.pp = player.Exp.pp.add(1)
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            display() {return `(*不消耗作文质量)将你的作文质量转化为天赋点数。<br>需要：${format(this.cost())}作文质量\n效果：获得${format(this.effect())}个免费天赋点`},
+            effect(x) { 
+              return x
+            },
+              style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
+            unlocked(){return hasMilestone("E",11)}
+          },
+          53: {
+            title: "洗点",
+            canAfford() { return true},
+            buy() {
+               player.Exp.pp = player.Exp.pp.add(player.Exp.treepp)
+               player.Exp.treepp = new Decimal(0)
+               setBuyableAmount("Exp",55,new Decimal(0))
+               setBuyableAmount("Exp",56,new Decimal(0))
+               setBuyableAmount("Exp",58,new Decimal(0))
+               setBuyableAmount("Exp",59,new Decimal(0))
+               setBuyableAmount("Exp",60,new Decimal(0))
+               setBuyableAmount("Exp",62,new Decimal(0))
+            },
+            display() {return `重置天赋树并且返还您全部的天赋点数。`},
+            effect(x) { 
+              mult2 = new Decimal(1000).pow(x)
+              return new Decimal(mult2)},
+              style() { return {'border-radius': "5px", height: "100px", width: "100px"}},
+            unlocked(){return hasMilestone("E",11)}
+          },
+          54: {
+            title: "作文题材挖掘-Uncommon",
+            canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount(this.layer,this.id).lt(5)},
+            cost(x) {return new Decimal(25).add(new Decimal(5).mul(x))},
+            buy() {
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                player.Exp.balanceTicai = player.Exp.balanceTicai.sub(1)
+            },
+            display() {return "进行生活实践，挖掘1个Uncommon级别的作文题材。<br>已挖掘总数："+getBuyableAmount(this.layer,this.id)+" / 5<br>需要: "+this.cost()+" 天赋点数"},
+            effect(x) { 
+              return x
+            },
+            style() { return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "200px", width: "200px"}},
+            unlocked(){return hasMilestone("E",11)}
+          },
+          55: {
+     unlocked(){return true},
+     title: "Chinese-11",
+     cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(29)
+     if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal("1eeeeeeeee10")},
+     req(){return new Decimal(18000)},
+     canAfford() { return player.Exp.pp.gte(this.cost())&&(player.E.ccPoints.gte(this.req())||player.Exp.bought55)},
+     buy() {
+     
+     player.Exp.pp = player.Exp.pp.sub(this.cost())
+     player.Exp.treepp = player.Exp.treepp.add(this.cost())
+     player.Exp.bought55 = true
+     setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+     },
+     display() {return `价格：${format(this.cost())}天赋点数\n需要：${format(this.req())}作文质量\n效果：你每次写作可以选择2个题材或写作风格。同时中考最佳分数倍增经验获取。\n当前：x${format(this.effect())}`},
+     effect(x) { 
+     eff = player.E.bestPoints
+     return eff
+     },
+     style() {  if (!getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "5px", height: "120px", width: "240px"}
+     if (getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#00BB00", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "5px", height: "120px", width: "240px"}},
+     },
+     56: {
+        unlocked(){return player.Exp.bought55},
+        title: "Chinese-21",
+        cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(4)
+        if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal("1eeeeeeeee10")},
+        canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",55).gte(1)},
+        buy() {
+        
+        player.Exp.pp = player.Exp.pp.sub(this.cost())
+        player.Exp.treepp = player.Exp.treepp.add(this.cost())
+        player.Exp.bought56 = true
+        setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+        },
+        display() {return `价格：${format(this.cost())}天赋点数\n效果：解锁名著升级。上一阶好文精华达到一定数目时，可以提升脑洞等级，挖掘更高级脑洞。(曾经购买过即生效)\n同时阅读感悟获取提升10倍。(需要当前拥有)\n当前：x${format(this.effect())}`},
+        effect(x) { 
+        eff = new Decimal(10)
+        return eff
+        },
+        style() {  if (!getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "5px", height: "240px", width: "240px"}
+        if (getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#00BB00", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "5px", height: "240px", width: "240px"}},
+        branches:["55"],
+        },
+        57: {
+            title: "技能5：阅读感悟能力提升",
+            cost(x) {if(!hasMilestone("E",6))return new Decimal(2).pow(x)
+            if(hasMilestone("E",6)&&!hasMilestone("E",8))return new Decimal(2).pow((x).sub(1)).floor()
+            if(hasMilestone("E",8))return x},
+            canAfford() { return player.Exp.pp.gte(this.cost())},
+            buy() {
+                player.Exp.pp = player.Exp.pp.sub(this.cost())
+               setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+               
+            },
+            display() {return `增加阅读感悟获取速度。\n当前等级： ${format(getBuyableAmount(this.layer, this.id))}\n价格：${format(this.cost())}天赋点\n效果：阅读感悟获取x${format(this.effect())}`},
+            effect(x) { 
+                let base = new Decimal(1.5)
+                if(!player.Exp.bought58)mult2 = base.pow(x)
+                if(player.Exp.bought58&&!hasMilestone("E",13))mult2 = base.pow(player.Exp.best22)
+                if(hasMilestone("E",13))mult2 = base.pow(player.Exp.best11)
+                return mult2},
+                style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
+            unlocked(){return hasMilestone("E",12)}
+          },
+          58: {
+            unlocked(){return player.Exp.bought55},
+            title: "Chinese-22",
+            cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(16)
+            if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal("1eeeeeeeee10")},
+            canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",55).gte(1)},
+            buy() {
+            
+            player.Exp.pp = player.Exp.pp.sub(this.cost())
+            player.Exp.treepp = player.Exp.treepp.add(this.cost())
+            player.Exp.bought58 = true
+            setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            display() {return `价格：${format(this.cost())}天赋点数\n效果：解锁1个全新的阅读感悟升级(曾经购买过即生效)，且天赋技能5基于最佳。\n同时阅读感悟数量倍增语文知识获取。(曾经购买过即生效)\n当前：x${format(this.effect())}`},
+            effect(x) { 
+            eff = player.C.readingPoints.add(1)
+            return eff
+            },
+            style() {  if (!getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "5px", height: "240px", width: "240px"}
+            if (getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#00BB00", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "5px", height: "240px", width: "240px"}},
+            branches:["55"],
+            },
+            59: {
+                unlocked(){return player.Exp.bought57||player.Exp.bought58},
+                title: "Chinese-31",
+                cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(4)
+                if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal("1eeeeeeeee10")},
+                canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",56).gte(1)},
+                buy() {
+                
+                player.Exp.pp = player.Exp.pp.sub(this.cost())
+                player.Exp.treepp = player.Exp.treepp.add(this.cost())
+                player.Exp.bought59 = true
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                },
+                display() {return `价格：${format(this.cost())}天赋点数\n效果：作文最佳分数倍增经验点数获取\n当前：x${format(this.effect())}`},
+                effect(x) { 
+                eff = player.E.ccBest.add(1)
+                return eff
+                },
+                style() {  if (!getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "5px", height: "120px", width: "240px"}
+                if (getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#00BB00", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "5px", height: "120px", width: "240px"}},
+                branches:["56"],
+                },
+                60: {
+                    unlocked(){return player.Exp.bought57||player.Exp.bought58},
+                    title: "Chinese-32",
+                    cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(4)
+                    if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal("1eeeeeeeee10")},
+                    canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",58).gte(1)},
+                    buy() {
+                    
+                    player.Exp.pp = player.Exp.pp.sub(this.cost())
+                    player.Exp.treepp = player.Exp.treepp.add(this.cost())
+                    player.Exp.bought60 = true
+                    setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                    },
+                    display() {return `价格：${format(this.cost())}天赋点数\n效果：经验获取阈值根据最佳中考分数而降低。\n当前：/${format(this.effect())}`},
+                    effect(x) { 
+                    eff = player.E.bestPoints.add(1)
+                    return eff
+                    },
+                    style() {  if (!getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "5px", height: "120px", width: "240px"}
+                    if (getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#00BB00", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "5px", height: "120px", width: "240px"}},
+                    branches:["58"],
+                    },
+                    61: {
+                        title: "作文写作手法挖掘-Uncommon",
+                        canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount(this.layer,this.id).lt(5)},
+                        cost(x) {return new Decimal(40).add(new Decimal(6).mul(x))},
+                        buy() {
+                            setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                            player.Exp.balanceTicai = player.Exp.balanceTicai.sub(1)
+                        },
+                        display() {return "进行生活实践，挖掘1个Uncommon级别的作文写作手法。<br>已挖掘总数："+getBuyableAmount(this.layer,this.id)+" / 5<br>需要: "+this.cost()+" 天赋点数"},
+                        effect(x) { 
+                          return x
+                        },
+                        style() { return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "200px", width: "200px"}},
+                        unlocked(){return hasMilestone("C",5)}
+                      },
+                      62: {
+                        unlocked(){return player.Exp.bought59&&player.Exp.bought60},
+                        title: "Chinese-41",
+                        cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(5)
+                        if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal("1eeeeeeeee10")},
+                        canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",59).gte(1)&&getBuyableAmount("Exp",60).gte(1)&&player.C.tier.gte(4)&&player.C.pps.gte(3.5)},
+                        buy() {
+                        
+                        player.Exp.pp = player.Exp.pp.sub(this.cost())
+                        player.Exp.treepp = player.Exp.treepp.add(this.cost())
+                        player.Exp.bought62 = true
+                        setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                        },
+                        display() {return `价格：${format(this.cost())}天赋点数\n需要：名著阶层到达 4 &脑洞每秒阅读能力达到 3.5\n效果：获得2个免费的阅读感悟技能5等级。同时，名著每提升1等阶，都会倍增一次天赋技能1基础。\n当前：x${format(this.effect())}`},
+                        effect(x) { 
+                        eff = new Decimal(2).pow(player.C.tier)
+                        return eff
+                        },
+                        style() {  if (!getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "5px", height: "240px", width: "240px"}
+                        if (getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#00BB00", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "5px", height: "240px", width: "240px"}},
+                        branches: [["59","yellow",15],["60","yellow",15]],
+                        },
+        
+         
     },
 })
 addLayer("Nf", {
@@ -9233,7 +11071,7 @@ addLayer("Nf", {
     },
 
     layerShown() { return true },   
-    tooltip(){return "考试策略"},      // Returns a bool for if this layer's node should be visible in the tree.
+          // Returns a bool for if this layer's node should be visible in the tree.
     tabFormat:{
         "NumberFormating":{
             
@@ -9243,6 +11081,209 @@ content:[function() {if(hasMilestone("C",2))return ["row",[["buyable",21],["buya
     upgrades: {
         // Look in the upgrades docs to see what goes here!
     },
+})
+addLayer("A", {
+    startData() { return {
+        unlocked: true,
+        Goals:new Decimal(0)
+    }},
+    symbol()
+    {
+return "A<sup>"+player.A.Goals+"</sup>"
+    },
+    color: "red",
+    row: "side",
+    layerShown() {return true}, 
+    tooltip() { // Optional, tooltip displays when the layer is locked
+        return ("成就")
+    },
+    
+    achievements: {
+        11: {
+            name: "从无到有",
+            done() { return player.E.bestPoints.gte(1) }
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "在中考中获得1分。",
+        },
+        12: {
+            name: "100个语文知识很多了！",
+            done() { return player.E.bestPoints.gte(1) }
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "获得100语文知识。",
+        },
+        13: {
+            name: "经验带来动力",
+            done() { return hasUpgrade("C",15) }
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "购买“语文经验”。",
+        },
+        14: {
+            name: "入“目”三分",
+            done() { return player.E.bestPoints.gte(3) }
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "在中考中获得3分。",
+        },
+        15: {
+            name: "百年中国梦",
+            done() { return player.E.year.gte(2050) }
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "时间到达2050年。",
+        },
+        16: {
+            name: "天赋萌新",
+            done() { return player.Exp.pp.gte(15) }
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "拥有15个天赋点数。",
+        },
+        17: {
+            name: "十全十美",
+            done() { return player.C.totalGold.gte(10) }
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "拥有10个金句摘抄。",
+        },
+        21: {
+            name: "勉强能看...",
+            done() { return player.E.ccPoints.gte(10000) }
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "作文最佳质量达到10000。",
+        },
+        22: {
+            name: "书是全世界的营养品 I",
+            done() { return player.C.tier.gte(1)}
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "名著等级达到1。",
+        },
+        23: {
+            name: "∞",
+            done() { return player.C.points.gte("1.8e308")}
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "拥有 1.8e308 语文知识。",
+        },
+        24: {
+            name: "初窥门径",
+            done() { return player.E.ccPoints.gte(50000)}
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "作文最佳质量达到50000。",
+        },
+        25: {
+            name: "三十而立",
+            done() { return player.E.bestPoints.gte(30)}
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "最佳中考分数达到30。<br>奖励：因为你卓越的学习能力，你的E层级图标变得更酷！",
+        },
+        26: {
+            name: "他们组成一棵树了？？？",
+            done() { return getBuyableAmount("Exp",59).gte(1)&&getBuyableAmount("Exp",60).gte(1)}
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "购买天赋树第3行的全部研究。",
+        },
+        27: {
+            name: "书是全世界的营养品 II",
+            done() { return player.C.tier.gte(4)}
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "名著等级达到4。",
+        },
+        
+    },
+    infoboxes: {
+        1: {
+                title(){return "第0幕-觉醒"},
+                body(){
+                        let a = "你是一名9年级14班的吊车尾中学生，平常无论大小考，成绩稳居班内89名——倒数第一，上课从不听讲，专业摸鱼九年。<br>"
+                        let b = "从小学1年级第一次接触学校生活以来，从不听讲，作业一次都未完成过，你的实力也不允许你完成任何一次作业。<br>"
+                        let c = "你的学习水平至今依旧停留在一年级上学期水平，和文盲别无两样，堪称九年义务教育的漏网之鱼。<br>"
+                        let d = "直到9年级下学期的中考百日誓师，你觉醒了。<br>"
+                        let e = "你开始羡慕上了进入市三所的学长学姐们，于是开始发奋图强，从小学一年级的知识开始，一步步精进自己的知识水平。<br>"
+                        let f = "你决定先从最简单的语文开始，并且给自己定了个小目标——中考一模成绩达到班里87名！(此剧情将会随着游戏进度一步步推进)<br>"
+                        g = ""
+                        if(hasMilestone("C",11)) g =""
+                        return a + b + c + d + e + f + g
+                },
+                style() { return {borderColor: "#888888",}},
+                titleStyle() { return {backgroundColor: "#888888",color: "#FFFFFF"}},
+        },
+        2: {
+            title(){return "第1幕-写作之路&初露锋芒"},
+            body(){
+                    let a = "在那年的中考一模中，你果然不负家长和老师的希望，排到了班里的86名！<br>"
+                    let b = "你的希望之火愈烧愈烈了，坚信着自己能够在班里的排行榜上越走越前。<br>"
+                    let c = "你开始看上了语文试卷的最后一题——作文。<br>"
+                    let d = "你虽然智力水平不佳，但是很快就学会了作文的基本要领，写出了人生中第一篇作文。<br>"
+                    let e = "你开始喜欢上习作的感觉，写作的感受是千丝万缕的。“剪不断,理还乱。是 ‘快乐’,别有一番滋味在心头”。它也带给你了源源不断地成就感与文化自信。<br>"
+                    let f = "掌握了写作之力的你，学习成绩又能够攀上怎样的台阶呢？<br>"
+                    g = ""
+                    if(hasMilestone("C",11)) g =""
+                    return a + b + c + d + e + f + g
+            },
+            style() { return {borderColor: "#888888",}},
+            titleStyle() { return {backgroundColor: "#888888",color: "#FFFFFF"}},
+    },
+    },
+    tooltip(){return '已完成成就：' + player.A.Goals + ' / 14<h2>'},
+    
+    tabFormat:{
+        "Awaken":{
+            content:[ "main-display",
+            "prestige-button",
+            
+        ["bar", "NextCD"],
+        ["infobox",1],
+        ["display-text",
+        function() {return '已完成成就：<h2 style=color:red;text-shadow:0px 0px 10px;>' + player.A.Goals + ' / 14<h2>'},
+            {}],
+        "challenges",
+        ["row",[["achievement",11],["achievement",12],["achievement",13],["achievement",14],["achievement",15],["achievement",16],["achievement",17],]],
+    "grid",
+
+"blank",
+"upgrades",
+"milestones",
+"buyables",
+
+"blank",
+, "blank", "blank", ],
+buttonStyle: {"border-color": "#888888"},
+},
+"Writing":{
+    content:[ "main-display",
+    "prestige-button",
+    
+["bar", "NextCD"],
+["infobox",2],
+["display-text",
+function() {return '已完成成就：<h2 style=color:red;text-shadow:0px 0px 10px;>' + player.A.Goals + ' / 14<h2>'},
+    {}],
+"challenges",
+["row",[["achievement",21],["achievement",22],["achievement",23],["achievement",24],["achievement",25],["achievement",26],["achievement",27],]],
+"grid",
+
+"blank",
+"upgrades",
+"milestones",
+"buyables",
+
+"blank",
+, "blank", "blank", ],
+buttonStyle: {"border-color": "#888888","background-color": "#222222"},
+unlocked(){return hasMilestone("E",10)}
+},},
+
+
+
 })
 function examReset()
 {
@@ -9272,5 +11313,26 @@ function examReset()
     setBuyableAmount("E",75,new Decimal(0))
     setBuyableAmount("E",76,new Decimal(0))
     setBuyableAmount("E",77,new Decimal(0))
+    setBuyableAmount("E",88,new Decimal(0))
+    setBuyableAmount("E",89,new Decimal(0))
+    setBuyableAmount("E",90,new Decimal(0))
+    setBuyableAmount("E",92,new Decimal(0))
+    setBuyableAmount("E",93,new Decimal(0))
+    setBuyableAmount("E",94,new Decimal(0))
+    setBuyableAmount("E",95,new Decimal(0))
+    setBuyableAmount("E",100,new Decimal(0))
+    setBuyableAmount("E",101,new Decimal(0))
+    setBuyableAmount("E",102,new Decimal(0))
+    setBuyableAmount("E",103,new Decimal(0))
+    setBuyableAmount("E",104,new Decimal(0))
+    setBuyableAmount("E",105,new Decimal(0))
+    setBuyableAmount("E",107,new Decimal(0))
+    setBuyableAmount("E",108,new Decimal(0))
+    setBuyableAmount("E",109,new Decimal(0))
+    setBuyableAmount("E",110,new Decimal(0))
+    setBuyableAmount("E",111,new Decimal(0))
+    setBuyableAmount("E",112,new Decimal(0))
+    setBuyableAmount("E",113,new Decimal(0))
+
 
 }
