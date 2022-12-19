@@ -104,7 +104,7 @@ addLayer("C", {
         1: {
                 title(){return "1阶好文精华"},
                 body(){
-                        let a = "您总共获得过<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(player.C.total1)+"<h4>个1阶好文精华，加成语文知识获取<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(tmp.C.effect1)+"x<h4>(上限在5000兆).<br>"
+                        let a = "您总共获得过<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(player.C.total1)+"<h4>个1阶好文精华，加成语文知识获取<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(tmp.C.effect1)+"x<h4>(上限在"+format(new Decimal(5e11))+").<br>"
                         let b = "您当前拥有<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(player.C.balance1)+"<h4>个1阶好文精华。<br>"
                         let c = "领悟每个1阶好文精华可获得<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>1<h4>阅读感悟。"
 
@@ -116,7 +116,7 @@ addLayer("C", {
         2: {
             title(){return "金句摘抄"},
             body(){
-                    let a = "您总共获得过<h4 style='color:#FFFF00;text-shadow:0px 0px 10px;'>"+format(player.C.totalGold)+"<h4>个金句摘抄，加成学分与语文知识获取<h4 style='color:#FFFF00;text-shadow:0px 0px 10px;'>"+format(tmp.C.effectGold1)+"x<h4>(上限在100穰).<br>，同时提升阅读感悟获取效率<h4 style='color:#FFFF00;text-shadow:0px 0px 10px;'>"+format(tmp.C.effectGold2)+"x<h4>(上限在30).<br>"
+                    let a = "您总共获得过<h4 style='color:#FFFF00;text-shadow:0px 0px 10px;'>"+format(player.C.totalGold)+"<h4>个金句摘抄，加成学分与语文知识获取<h4 style='color:#FFFF00;text-shadow:0px 0px 10px;'>"+format(tmp.C.effectGold1)+"x<h4>(上限在"+format(new Decimal(1e30))+").<br>，同时提升阅读感悟获取效率<h4 style='color:#FFFF00;text-shadow:0px 0px 10px;'>"+format(tmp.C.effectGold2)+"x<h4>(上限在30).<br>"
                     let b = "您当前拥有<h4 style='color:#FFFF00;text-shadow:0px 0px 10px;'>"+format(player.C.balanceGold)+"<h4>个金句摘抄。<br>"
                     let c = "金句摘抄是脑洞精炼的必要原料！"
 
@@ -140,7 +140,7 @@ addLayer("C", {
 4: {
     title(){return "3阶好文精华"},
     body(){
-            let a = "您总共获得过<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(player.C.total3)+"<h4>个3阶好文精华，加成学分获取<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(tmp.C.effect3)+"x<h4>(上限在10垓).<br>"
+            let a = "您总共获得过<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(player.C.total3)+"<h4>个3阶好文精华，加成学分获取<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(tmp.C.effect3)+"x<h4>(上限在"+format(new Decimal(1e21))+").<br>"
             let b = "您当前拥有<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(player.C.balance3)+"<h4>个3阶好文精华。<br>"
             let c = "领悟每个3阶好文精华可获得<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>30<h4>阅读感悟。"
 
@@ -13485,7 +13485,7 @@ unlocked(){return hasMilestone("E",11)},
         12: {
             title: "技能2：语文知识获取",
             cost(x) {if(!hasMilestone("E",6))return new Decimal(2).pow(x)
-            if(hasMilestone("E",6))return new Decimal(2).pow((x).sub(1)).floor()
+            if(hasMilestone("E",6)&&!hasMilestone("E",8))return new Decimal(2).pow((x).sub(1)).floor()
             if(hasMilestone("E",8)&&!hasMilestone("Eng",0))return x
             if(hasMilestone("Eng",0)&&!hasMilestone("C",6)) return x.pow(0.9).floor()
             if(hasMilestone("C",6)&&!hasMilestone("E",15)) return x.pow(0.8).floor()
