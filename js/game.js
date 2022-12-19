@@ -384,7 +384,9 @@ function gameLoop(diff) {
 }
 
 function hardReset(resetOptions) {
-	if (!confirm("Are you sure you want to do this? You will lose all your progress!")) return
+	if (!confirm("你真的要硬重置吗？这会抹去你所有的游戏进度，而不会获得任何奖励！")) return
+	if (!confirm("你真的真的要硬重置吗？这会抹去你所有的游戏进度，而不会获得任何奖励！")) return
+	if (!confirm("你真的真的真的要硬重置吗？这会抹去你所有的游戏进度，而不会获得任何奖励！")) return
 	player = null
 	if(resetOptions) options = null
 	save(true);

@@ -24,6 +24,9 @@ addLayer("C", {
         remain2: new Decimal(5),
         total2: new Decimal(0),
         balance2: new Decimal(0),
+        remain3: new Decimal(10),
+        total3: new Decimal(0),
+        balance3: new Decimal(0),
         end: new Decimal(0),
         read: new Decimal(0),
                   // "points" is the internal name for the main resource of the layer.
@@ -35,6 +38,9 @@ addLayer("C", {
         if(getBuyableAmount("C",60).gte(1)) max = max.add(1)
         if(getBuyableAmount("C",61).gte(1)) max = max.add(1)
         if(getBuyableAmount("C",68).gte(1)) max = max.add(1)
+        if(getBuyableAmount("C",69).gte(1)) max = max.add(1)
+        if(getBuyableAmount("C",75).gte(1)) max = max.add(1)
+        if(getBuyableAmount("C",76).gte(1)) max = max.add(1)
         return max
     },
     goldMult()
@@ -63,6 +69,8 @@ addLayer("C", {
         if(player.C.totalGold.gte(1)) mult = mult.mul(tmp.C.effectGold2)
         if((getBuyableAmount("Exp",57)).gte(1)||player.Exp.bought58) mult = mult.mul(buyableEffect("Exp",57))
         if(hasMilestone("E",13)) mult = mult.mul(10)
+        if(player.Eng.points.gte(1)) mult = mult.mul(new Decimal(3).pow(player.Eng.points).min(59049))
+        if(hasUpgrade("Eng",11)) mult = mult.mul(upgradeEffect("Eng",11))
         return mult
     },
     effectGold1()
@@ -83,6 +91,11 @@ addLayer("C", {
     effect2()
     {
     let eff = player.C.total2.add(1).sqrt().min(35)
+    return eff
+    },
+    effect3()
+    {
+    let eff = player.C.total3.add(1).pow(6).min(1e21)
     return eff
     },
     
@@ -124,6 +137,18 @@ addLayer("C", {
         style() { return {borderColor: "#444444",}},
         titleStyle() { return {backgroundColor: "#444444",color: "#FFFFFF"}},
 },
+4: {
+    title(){return "3阶好文精华"},
+    body(){
+            let a = "您总共获得过<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(player.C.total3)+"<h4>个3阶好文精华，加成学分获取<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(tmp.C.effect3)+"x<h4>(上限在10垓).<br>"
+            let b = "您当前拥有<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>"+format(player.C.balance3)+"<h4>个3阶好文精华。<br>"
+            let c = "领悟每个3阶好文精华可获得<h4 style='color:#00FF00;text-shadow:0px 0px 10px;'>30<h4>阅读感悟。"
+
+            return a + b + c
+    },
+    style() { return {borderColor: "#888888",}},
+    titleStyle() { return {backgroundColor: "#888888",color: "#FFFFFF"}},
+},
     },
     buyables:
     {
@@ -136,7 +161,8 @@ addLayer("C", {
             },
             display() {return "脑洞力量："+format(player.C.power)+"<br>思维活跃度："+format(player.C.q)+"%<br>阅读冷却："+format(player.C.freeze)+"s<br>每秒阅读能力:"+format(player.C.pps)},
             style() { if(player.C.brainTier.lt(2))return {'background-color': "#111111",color: "white", 'border-color': "#444444",'border-radius': "5px", height: "120px", width: "240px"}
-            if(player.C.brainTier.gte(2)&&player.C.brainTier.lt(3))return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "120px", width: "240px"}},
+            if(player.C.brainTier.gte(2)&&player.C.brainTier.lt(3))return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "120px", width: "240px"}
+            if(player.C.brainTier.gte(3)&&player.C.brainTier.lt(4))return {'background-color': "#888888",color: "white", 'border-color': "#AAAAAA",'border-radius': "5px", height: "120px", width: "240px"}},
             unlocked(){return true},
             
           },
@@ -212,24 +238,26 @@ return gain
             canAfford() { return player.C.readingPoints.gte(this.cost())},
             cost(x) {return new Decimal(10).pow(x.add(1))},
             buy() {
-              player.C.readingPoints = player.C.readingPoints.sub(this.cost())
+              if(!hasMilestone("Eng",2))player.C.readingPoints = player.C.readingPoints.sub(this.cost())
               setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
                
             },
             display() {return `提升阅读感悟获取倍率。\n当前等级： ${format(getBuyableAmount(this.layer, this.id))}\n价格：${format(this.cost())}阅读感悟\n效果：阅读感悟获取x${format(this.effect())}`},
             effect(x) { 
               let base = new Decimal(2)
+              if(getBuyableAmount("Exp",65).gte(1)) base = base.mul(1.4)
               mult2 = base.pow(x)
               return mult2},
             unlocked(){return hasMilestone("E",8)},
             style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
+            buyMax(){return hasMilestone("Eng",2)}
           },
           42: {
             title: "阅读技能2:天赋技能2基础倍增",
             canAfford() { return player.C.readingPoints.gte(this.cost())},
             cost(x) {return new Decimal(15).mul(new Decimal(3).pow(x))},
             buy() {
-              player.C.readingPoints = player.C.readingPoints.sub(this.cost())
+                if(!hasMilestone("Eng",2))player.C.readingPoints = player.C.readingPoints.sub(this.cost())
               setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
                
             },
@@ -241,13 +269,14 @@ return gain
               return mult2},
             unlocked(){return hasMilestone("E",8)},
             style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
+            buyMax(){return hasMilestone("Eng",2)}
           },
           43: {
             title: "阅读技能3:经验获取倍增",
             canAfford() { return player.C.readingPoints.gte(this.cost())},
             cost(x) {return new Decimal(30).mul(new Decimal(4).pow(x))},
             buy() {
-              player.C.readingPoints = player.C.readingPoints.sub(this.cost())
+                if(!hasMilestone("Eng",2))player.C.readingPoints = player.C.readingPoints.sub(this.cost())
               setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
                
             },
@@ -258,13 +287,14 @@ return gain
               return mult2},
             unlocked(){return hasMilestone("E",8)},
             style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
+            buyMax(){return hasMilestone("Eng",2)}
           },
           44: {
             title: "阅读技能4:金句摘抄概率提升",
             canAfford() { return player.C.readingPoints.gte(this.cost())},
             cost(x) {return new Decimal(200).mul(new Decimal(5).pow(x))},
             buy() {
-              player.C.readingPoints = player.C.readingPoints.sub(this.cost())
+                if(!hasMilestone("Eng",2))player.C.readingPoints = player.C.readingPoints.sub(this.cost())
               setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
                
             },
@@ -275,6 +305,7 @@ return gain
               return mult2},
             unlocked(){return hasMilestone("C",4)},
             style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
+            buyMax(){return hasMilestone("Eng",2)}
           },
           51: {
             title: "←",
@@ -356,7 +387,7 @@ return gain
             },
             display() {return "领悟1个2阶精选好文，并获取 "+format(this.gain())+" 阅读感悟。"},
             style() { return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "100px", width: "200px"}},
-            unlocked(){return hasMilestone("E",8)},
+            unlocked(){return player.C.total2.gte(1)},
             
           },
           57: {
@@ -374,7 +405,7 @@ return gain
             },
             display() {return "领悟您50%的2阶精选好文，并获取 "+format(this.gain())+" 阅读感悟。"},
             style() { return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "100px", width: "200px"}},
-            unlocked(){return hasMilestone("E",8)},
+            unlocked(){return player.C.total2.gte(1)},
             
           },
           58: {
@@ -392,7 +423,7 @@ return gain
             },
             display() {return "领悟您100%的2阶精选好文，并获取 "+format(this.gain())+" 阅读感悟。"},
             style() { return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "100px", width: "200px"}},
-            unlocked(){return hasMilestone("E",8)},
+            unlocked(){return player.C.total2.gte(1)},
             
           },
           59: {
@@ -400,7 +431,7 @@ return gain
             canAfford() { return player.C.readingPoints.gte(this.cost())&&buyableEffect(this.layer,this.id).lt(9)},
             cost(x) {return new Decimal(10).pow(new Decimal(2).pow(x))},
             buy() {
-              player.C.readingPoints = player.C.readingPoints.sub(this.cost())
+                if(!hasMilestone("Eng",2))player.C.readingPoints = player.C.readingPoints.sub(this.cost())
               setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
                
             },
@@ -410,9 +441,11 @@ return gain
               mult2 = base.add(x)
               if(hasMilestone("E",13)) mult2 = mult2.add(1)
               if(getBuyableAmount("Exp",62).gte(1)) mult2 = mult2.add(2)
+              if(getBuyableAmount("Exp",68).gte(1)) mult2 = new Decimal(9)
               return mult2},
             unlocked(){return player.Exp.bought58},
             style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
+            buyMax(){return hasMilestone("Eng",2)}
           },
           60: {
             title: "名著许可β",
@@ -490,7 +523,7 @@ return gain
                player.C.balanceGold = player.C.balanceGold.sub(this.cost3())
                player.C.cq = player.E.random.mul(10)
                player.C.cpps = new Decimal(5).mul(player.C.cq).div(100)
-               player.C.cfreeze = new Decimal(Math.random()*10).div(5)
+               player.C.cfreeze = new Decimal(Math.random()*10).div(5).max(0.3)
                player.C.cpower = player.C.cpps.mul(player.C.cfreeze)
                player.C.cbrainTier = new Decimal(2)
             },
@@ -518,6 +551,133 @@ return gain
             unlocked(){return player.C.tier.gte(3)&&getBuyableAmount(this.layer,this.id).lt(1)},
             
           },
+          69: {
+            title: "名著许可ε",
+            canAfford() { return player.C.readingPoints.gte(this.cost())&&player.E.bestPoints.gte(47) },
+            buy() {
+               setBuyableAmount(this.layer,this.id,new Decimal(1))
+            },
+            cost(x) {return new Decimal(6e13)},
+            display() {return "获得阅读下一阶名著的许可。在5阶名著，将会解锁3阶精选好文！<br>需要："+format(this.cost())+"阅读感悟&中考最高分数达到 47"},
+            style() { return {'background-color': "#444444",color: "white", 'border-color': "#888888",'border-radius': "5px", height: "120px", width: "240px"}},
+            unlocked(){return player.C.tier.gte(4)&&getBuyableAmount(this.layer,this.id).lt(1)},
+            
+          },
+          70: {
+            title: "3阶精选好文",
+            canAfford() { return false},
+            buy() {
+               setBuyableAmount("Nf",11,new Decimal(1))
+               setBuyableAmount("Nf",12,new Decimal(0))
+            },
+            display() {return "阅读进度："+format(player.C.remain3)+"/ 10<br>阅读奖励：<br>(100%)3阶好文精华*1"},
+            style() { return {'background-color': "#888888",color: "white", 'border-color': "#AAAAAA",'border-radius': "5px", height: "120px", width: "240px"}},
+            unlocked(){return player.C.current == 3},
+            
+          },
+          71: {
+            title: "领悟x1",
+            canAfford() { return player.C.balance3.gte(1)},
+            buy() {
+            player.C.readingPoints = player.C.readingPoints.add(this.gain())
+            player.C.balance3 = player.C.balance3.sub(1) 
+            },
+            gain()
+            {
+let gain = new Decimal(30)
+gain = gain.mul(tmp.C.readingPointsMult)
+return gain
+            },
+            display() {return "领悟1个3阶精选好文，并获取 "+format(this.gain())+" 阅读感悟。"},
+            style() { return {'background-color': "#888888",color: "white", 'border-color': "#AAAAAA",'border-radius': "5px", height: "100px", width: "200px"}},
+            unlocked(){return player.C.total3.gte(1)},
+            
+          },
+          72: {
+            title: "领悟50%",
+            canAfford() { return player.C.balance3.gte(1)},
+            buy() {
+            player.C.readingPoints = player.C.readingPoints.add(this.gain())
+            player.C.balance3 = player.C.balance3.sub(player.C.balance3.mul(0.5).floor())
+            },
+            gain()
+            {
+let gain = new Decimal(30)
+gain = gain.mul(tmp.C.readingPointsMult).mul(player.C.balance3.mul(0.5).floor())
+return gain
+            },
+            display() {return "领悟您50%的3阶精选好文，并获取 "+format(this.gain())+" 阅读感悟。"},
+            style() { return {'background-color': "#888888",color: "white", 'border-color': "#AAAAAA",'border-radius': "5px", height: "100px", width: "200px"}},
+            unlocked(){return player.C.total3.gte(1)},
+            
+          },
+          73: {
+            title: "领悟100%",
+            canAfford() { return player.C.balance3.gte(1)},
+            buy() {
+            player.C.readingPoints = player.C.readingPoints.add(this.gain())
+            player.C.balance3 = new Decimal(0)
+            },
+            gain()
+            {
+let gain = new Decimal(30)
+gain = gain.mul(tmp.C.readingPointsMult).mul(player.C.balance3)
+return gain
+            },
+            display() {return "领悟您100%的3阶精选好文，并获取 "+format(this.gain())+" 阅读感悟。"},
+            style() { return {'background-color': "#888888",color: "white", 'border-color': "#AAAAAA",'border-radius': "5px", height: "100px", width: "200px"}},
+            unlocked(){return player.C.total3.gte(1)},
+            
+          },
+          74: {
+            title: "打造3阶脑洞",
+            canAfford() { return player.C.balance3.gte(this.cost1())&&player.C.readingPoints.gte(this.cost2())&&player.C.balanceGold.gte(this.cost3()) },
+            buy() {
+               player.C.balance3 = player.C.balance3.sub(this.cost1())
+               player.C.readingPoints = player.C.readingPoints.sub(this.cost2())
+               player.C.balanceGold = player.C.balanceGold.sub(this.cost3())
+               player.C.cq = player.E.random.mul(10)
+               player.C.cpps = new Decimal(10).mul(player.C.cq).div(100)
+               player.C.cfreeze = new Decimal(Math.random()*10).div(5).max(0.3)
+               player.C.cpower = player.C.cpps.mul(player.C.cfreeze)
+               player.C.cbrainTier = new Decimal(3)
+            },
+            cost1()
+            {return new Decimal(300)},
+            cost2()
+            {return new Decimal(1e14)},
+            cost3()
+            {return new Decimal(10)},
+            cost(x) {return new Decimal(2e12)},
+            display() {return "使用3阶好文精华和阅读感悟、金句摘抄，打造3阶的随机属性脑洞。<br>基础每秒阅读能力:5<br>花费3阶好文精华："+format(this.cost1())+"<br>花费阅读点数："+format(this.cost2())+"<br>花费金句摘抄："+format(this.cost3())},
+            style() { return {'background-color': "#888888",color: "white", 'border-color': "#AAAAAA",'border-radius': "5px", height: "240px", width: "240px"}},
+            unlocked(){return true},
+            
+          },
+          75: {
+            title: "名著许可ζ",
+            canAfford() { return player.C.readingPoints.gte(this.cost())&&player.E.bestPoints.gte(48) },
+            buy() {
+               setBuyableAmount(this.layer,this.id,new Decimal(1))
+            },
+            cost(x) {return new Decimal(1e15)},
+            display() {return "获得阅读下一阶名著的许可。在6阶名著，3阶精选好文的出现概率将会提升！<br>需要："+format(this.cost())+"阅读感悟&中考最高分数达到 48"},
+            style() { return {'background-color': "#888888",color: "white", 'border-color': "#AAAAAA",'border-radius': "5px", height: "120px", width: "240px"}},
+            unlocked(){return player.C.tier.gte(5)&&getBuyableAmount(this.layer,this.id).lt(1)},
+            
+          },
+          76: {
+            title: "名著许可η",
+            canAfford() { return player.C.readingPoints.gte(this.cost())&&player.E.bestPoints.gte(61) },
+            buy() {
+               setBuyableAmount(this.layer,this.id,new Decimal(1))
+            },
+            cost(x) {return new Decimal(1e26)},
+            display() {return "获得阅读下一阶名著的许可。在7阶名著，3阶精选好文的出现概率将会提升！<br>需要："+format(this.cost())+"阅读感悟&中考最高分数达到 61"},
+            style() { return {'background-color': "#888888",color: "white", 'border-color': "#AAAAAA",'border-radius': "5px", height: "120px", width: "240px"}},
+            unlocked(){return player.C.tier.gte(6)&&getBuyableAmount(this.layer,this.id).lt(1)},
+            
+          },
     },
     update(diff)
     {
@@ -525,6 +685,8 @@ return gain
     if(player.C.remain1.lte(0)&&tmp.C.goldChance.gte(player.E.random.mul(10))) player.C.remain1 = new Decimal(2), player.C.balance1 = player.C.balance1.add(tmp.C.readMult), player.C.total1 = player.C.total1.add(tmp.C.readMult), player.C.end = new Decimal(1),player.C.totalGold = player.C.totalGold.add(tmp.C.goldMult),player.C.balanceGold = player.C.balanceGold.add(tmp.C.goldMult)
     if(player.C.remain2.lte(0)&&!tmp.C.goldChance.gte(player.E.random.mul(10))) player.C.remain2 = new Decimal(5), player.C.balance2 = player.C.balance2.add(tmp.C.readMult), player.C.total2 = player.C.total2.add(tmp.C.readMult), player.C.end = new Decimal(1)
     if(player.C.remain2.lte(0)&&tmp.C.goldChance.gte(player.E.random.mul(10))) player.C.remain2 = new Decimal(5), player.C.balance2 = player.C.balance2.add(tmp.C.readMult), player.C.total2 = player.C.total2.add(tmp.C.readMult), player.C.end = new Decimal(1),player.C.totalGold = player.C.totalGold.add(tmp.C.goldMult),player.C.balanceGold = player.C.balanceGold.add(tmp.C.goldMult)
+    if(player.C.remain3.lte(0)&&!tmp.C.goldChance.gte(player.E.random.mul(10))) player.C.remain3 = new Decimal(10), player.C.balance3 = player.C.balance3.add(tmp.C.readMult), player.C.total3 = player.C.total3.add(tmp.C.readMult), player.C.end = new Decimal(1)
+    if(player.C.remain3.lte(0)&&tmp.C.goldChance.gte(player.E.random.mul(10))) player.C.remain3 = new Decimal(10), player.C.balance3 = player.C.balance3.add(tmp.C.readMult), player.C.total3 = player.C.total3.add(tmp.C.readMult), player.C.end = new Decimal(1),player.C.totalGold = player.C.totalGold.add(tmp.C.goldMult),player.C.balanceGold = player.C.balanceGold.add(tmp.C.goldMult)
     if(player.C.end.gte(1)&&player.C.tier == 0) player.C.current = new Decimal(1),player.C.end = new Decimal(0)
     if(player.C.end.gte(1)&&player.C.tier == 1&&player.E.random.lt(9)) player.C.current = new Decimal(1),player.C.end = new Decimal(0)
     if(player.C.end.gte(1)&&player.C.tier == 1&&player.E.random.gte(9)) player.C.current = new Decimal(2),player.C.end = new Decimal(0)
@@ -534,11 +696,109 @@ return gain
     if(player.C.end.gte(1)&&player.C.tier == 3&&player.E.random.gte(5)) player.C.current = new Decimal(2),player.C.end = new Decimal(0)
     if(player.C.end.gte(1)&&player.C.tier == 4&&player.E.random.lt(3)) player.C.current = new Decimal(1),player.C.end = new Decimal(0)
     if(player.C.end.gte(1)&&player.C.tier == 4&&player.E.random.gte(3)) player.C.current = new Decimal(2),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 5&&player.E.random.lt(6)) player.C.current = new Decimal(1),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 5&&player.E.random.gte(6)&&player.E.random.lt(8)) player.C.current = new Decimal(2),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 5&&player.E.random.gte(8)) player.C.current = new Decimal(3),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 6&&player.E.random.lt(3)) player.C.current = new Decimal(1),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 6&&player.E.random.gte(3)&&player.E.random.lt(5)) player.C.current = new Decimal(2),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 6&&player.E.random.gte(5)) player.C.current = new Decimal(3),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 7&&player.E.random.lt(2)) player.C.current = new Decimal(1),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 7&&player.E.random.gte(2)&&player.E.random.lt(3)) player.C.current = new Decimal(2),player.C.end = new Decimal(0)
+    if(player.C.end.gte(1)&&player.C.tier == 7&&player.E.random.gte(3)) player.C.current = new Decimal(3),player.C.end = new Decimal(0)
     if(hasMilestone("E",6)) player.C.currentlyFreeze = player.C.currentlyFreeze.sub(diff)
     if(player.C.currentlyFreeze.lt(0)) player.C.currentlyFreeze = player.C.freeze, player.C.read = new Decimal(1)
     if(player.C.read.gte(1)&&player.C.current == 1) player.C.remain1 = player.C.remain1.sub(player.C.power),player.C.read = new Decimal(0)
     if(player.C.read.gte(1)&&player.C.current == 2) player.C.remain2 = player.C.remain2.sub(player.C.power),player.C.read = new Decimal(0)
+    if(player.C.read.gte(1)&&player.C.current == 3) player.C.remain3 = player.C.remain3.sub(player.C.power),player.C.read = new Decimal(0)
     },
+    tabFormat:{
+        "Main":{
+            content:[
+    "main-display",
+    function(){if(!hasMilestone("C",1))return "prestige-button"},
+    "blank",
+    ["display-text",
+            function() {if(!hasMilestone("C",1)) return "↑点击以学习语文，提升语文知识！"},
+            {}],
+            ["display-text",
+            function() {if(hasMilestone("C",1)) return "你正在每秒获取"+format(tmp.C.gainMult.pow(tmp.C.gainExp))+"基础语文知识"},
+            {}],
+            ["display-text",
+            function() {if(tmp.C.gainMult.gte(tmp.C.softcap)) return "软上限力量："+format(new Decimal(1).sub(tmp.C.softcapPower).mul(100))+"%"},
+            {}],
+            ["display-text",
+            function() {if(tmp.C.gainMult.gte(tmp.C.softcap)) return "软上限起始于："+format(tmp.C.softcap)+""},
+            {}],
+    "grid",
+
+"blank",
+"upgrades",
+"milestones",
+
+"blank",
+, "blank", "blank", ]
+},
+"Reading":{
+    content:[
+"main-display",
+["display-text",
+            function() {if(hasMilestone("E",8))return "您当前拥有的阅读感悟为 <h2 style='color:#888888;text-shadow:0px 0px 10px;'>"+format(player.C.readingPoints)+ "<h2>"},
+            {}],
+            ["display-text",
+            function() {if(hasMilestone("E",8))return "您当前拥有的金句摘抄为 <h2 style='color:#FFFF00;text-shadow:0px 0px 10px;'>"+format(player.C.balanceGold)+ "<h2>"},
+            {}],
+            ["display-text",
+            function() {if(hasMilestone("E",8))return "当前每次阅读获取金句摘抄的概率为 <h2 style='color:#FFFF00;text-shadow:0px 0px 10px;'>"+format(tmp.C.goldChance)+ "%<h2>"},
+            {}],
+            ["display-text",
+            function() {return "<h4 style='color:#FF0000;text-shadow:0px 0px 10px;'>Warning:阅读是一个长期积累的过程。如果你在阅读过程中离线，阅读的收益会严重降低！<h4>"},
+            {}],
+            
+            ["row",[["buyable",51],["buyable",53],["buyable",52]]],
+["buyable",11],
+["row",[["buyable",21],["buyable",54],["buyable",55],["buyable",60],["buyable",61],["buyable",68],["buyable",69],["buyable",70],["buyable",75],["buyable",76]]],
+function(){if(player.C.totalGold.gte(1))return ["infobox","2"]},
+function(){if(player.C.total1.gte(1))return ["infobox","1"]},
+
+
+["row",[["buyable",31],["buyable",32],["buyable",33]]],
+function(){if(player.C.total2.gte(1))return ["infobox","3"]},
+["row",[["buyable",56],["buyable",57],["buyable",58]]],
+function(){if(player.C.total3.gte(1))return ["infobox","4"]},
+["row",[["buyable",71],["buyable",72],["buyable",73]]],
+],
+
+unlocked(){return hasMilestone("E",6)}
+},
+"ReadingSkill":{
+    content:[
+"main-display",
+["display-text",
+            function() {if(hasMilestone("E",8))return "您当前拥有的阅读感悟为 <h2 style='color:#888888;text-shadow:0px 0px 10px;'>"+format(player.C.readingPoints)+ "<h2>"},
+            {}],
+["row",[["buyable",41],["buyable",42],["buyable",43]]],
+["row",[["buyable",44],["buyable",59]]],
+],
+unlocked(){return hasMilestone("E",8)}
+},
+"ReadingUpgrade":{
+    content:[
+"main-display",
+["display-text",
+            function() {if(hasMilestone("E",8))return "您当前拥有的阅读感悟为 <h2 style='color:#888888;text-shadow:0px 0px 10px;'>"+format(player.C.readingPoints)+ "<h2>"},
+            {}],
+            ["display-text",
+            function() {return "*Tips:应用意味着用打造的脑洞来替换目前的脑洞。如果脑洞的每秒阅读能力低于1，将会无法应用脑洞。"},
+            {}],
+            ["row",[["buyable",64]]],
+            ["row",[["buyable",65],["buyable",66]]],
+            ["row",[["buyable",67],["buyable",74]]],
+
+
+],
+unlocked(){return hasMilestone("C",5)&&tmp.C.maxTier.gte(3)}
+},
+},
     
     color: "#888888",                       // The color for this layer, which affects many elements.
     resource: "语文知识",            // The name of this layer's main prestige resource.
@@ -572,6 +832,7 @@ return gain
         if(hasMilestone("E",6)) gain = gain.mul(tmp.C.effect1)
         if(player.C.totalGold.gte(1)) gain = gain.mul(tmp.C.effectGold1)
         if(player.Exp.bought58) gain = gain.mul(buyableEffect("Exp",58))
+        if(player.Eng.totalpp.gte(1)) gain = gain.mul(tmp.Eng.ppEffect)
         return gain            // Factor in any bonuses multiplying gain here.
     },
     gainExp() {                             // Returns the exponent to your gain of the prestige resource.
@@ -592,6 +853,7 @@ return gain
             effect(){ let eff = new Decimal(10)
             return eff
             },
+            tooltip(){return "受到其后其他加成的影响。"},
             unlocked(){return hasMilestone("E",0)},
             effectDisplay(){return `+${format(this.effect())}`}
             
@@ -844,94 +1106,16 @@ return gain
                 return player.C.tier.gte(3)
             }
         },
+        6: {
+            requirementDescription: "最高名著阶层达到 5(6)",
+            effectDescription: "如果你的英语知识低于60000秒的产量，则获取速度提升1000倍，天赋技能指数为0.8。同时在语文考试中解锁套作！",
+            done() {
+                return player.C.tier.gte(5)
+            }
+        },
     },
     passiveGeneration(){return hasMilestone('C',1)? 1 : 0},
-    tabFormat:{
-        "Main":{
-            content:[
-    "main-display",
-    function(){if(!hasMilestone("C",1))return "prestige-button"},
-    "blank",
-    ["display-text",
-            function() {if(!hasMilestone("C",1)) return "↑点击以学习语文，提升语文知识！"},
-            {}],
-            ["display-text",
-            function() {if(hasMilestone("C",1)) return "你正在每秒获取"+format(tmp.C.gainMult.pow(tmp.C.gainExp))+"基础语文知识"},
-            {}],
-            ["display-text",
-            function() {if(tmp.C.gainMult.gte(tmp.C.softcap)) return "软上限力量："+format(new Decimal(1).sub(tmp.C.softcapPower).mul(100))+"%"},
-            {}],
-            ["display-text",
-            function() {if(tmp.C.gainMult.gte(tmp.C.softcap)) return "软上限起始于："+format(tmp.C.softcap)+""},
-            {}],
-    "grid",
 
-"blank",
-"upgrades",
-"milestones",
-
-"blank",
-, "blank", "blank", ]
-},
-"Reading":{
-    content:[
-"main-display",
-["display-text",
-            function() {if(hasMilestone("E",8))return "您当前拥有的阅读感悟为 <h2 style='color:#888888;text-shadow:0px 0px 10px;'>"+format(player.C.readingPoints)+ "<h2>"},
-            {}],
-            ["display-text",
-            function() {if(hasMilestone("E",8))return "您当前拥有的金句摘抄为 <h2 style='color:#FFFF00;text-shadow:0px 0px 10px;'>"+format(player.C.balanceGold)+ "<h2>"},
-            {}],
-            ["display-text",
-            function() {if(hasMilestone("E",8))return "当前每次阅读获取金句摘抄的概率为 <h2 style='color:#FFFF00;text-shadow:0px 0px 10px;'>"+format(tmp.C.goldChance)+ "%<h2>"},
-            {}],
-            ["display-text",
-            function() {return "<h4 style='color:#FF0000;text-shadow:0px 0px 10px;'>Warning:阅读是一个长期积累的过程。如果你在阅读过程中离线，阅读的收益会严重降低！<h4>"},
-            {}],
-            
-            ["row",[["buyable",51],["buyable",53],["buyable",52]]],
-["buyable",11],
-["row",[["buyable",21],["buyable",54],["buyable",55],["buyable",60],["buyable",61],["buyable",68]]],
-function(){if(player.C.totalGold.gte(1))return ["infobox","2"]},
-function(){if(player.C.total1.gte(1))return ["infobox","1"]},
-
-
-["row",[["buyable",31],["buyable",32],["buyable",33]]],
-function(){if(player.C.total2.gte(1))return ["infobox","3"]},
-["row",[["buyable",56],["buyable",57],["buyable",58]]],
-],
-
-unlocked(){return hasMilestone("E",6)}
-},
-"ReadingSkill":{
-    content:[
-"main-display",
-["display-text",
-            function() {if(hasMilestone("E",8))return "您当前拥有的阅读感悟为 <h2 style='color:#888888;text-shadow:0px 0px 10px;'>"+format(player.C.readingPoints)+ "<h2>"},
-            {}],
-["row",[["buyable",41],["buyable",42],["buyable",43]]],
-["row",[["buyable",44],["buyable",59]]],
-],
-unlocked(){return hasMilestone("E",8)}
-},
-"ReadingUpgrade":{
-    content:[
-"main-display",
-["display-text",
-            function() {if(hasMilestone("E",8))return "您当前拥有的阅读感悟为 <h2 style='color:#888888;text-shadow:0px 0px 10px;'>"+format(player.C.readingPoints)+ "<h2>"},
-            {}],
-            ["display-text",
-            function() {return "*Tips:应用意味着用打造的脑洞来替换目前的脑洞。如果脑洞的每秒阅读能力低于1，将会无法应用脑洞。"},
-            {}],
-            ["row",[["buyable",64]]],
-            ["row",[["buyable",65],["buyable",66]]],
-            ["row",[["buyable",67]]],
-
-
-],
-unlocked(){return hasMilestone("C",5)}
-},
-}
 })
 
 addLayer("E", {
@@ -948,6 +1132,11 @@ addLayer("E", {
         inChinese: new Decimal(0),
         ChineseBest: new Decimal(0),
         ChineseTime: new Decimal(0),
+        English: new Decimal(0),
+        inEnglish: new Decimal(0),
+        completedEnglish: false,
+        EnglishBest: new Decimal(0),
+        EnglishTime: new Decimal(0),
         zuowenTime: new Decimal(0),
         inZuowen: new Decimal(0),
         startedZuowen: new Decimal(0),
@@ -970,18 +1159,25 @@ addLayer("E", {
         story: new Decimal(0),
         freeze: new Decimal(0),
         ccFreeze: new Decimal(10)    // "points" is the internal name for the main resource of the layer.
-    }},
+    };},
     nodeStyle() {
         if(player.E.bestPoints.lt(30))return {
             'color': '#FFFFFF',
-            'background-image': 'url(https://i.postimg.cc/W3PhYtLp/Rating-0.png)',
+            'background-image': 'url(https://i.postimg.cc/YChQW1Yh/Rating-0-30.jpg)',
             'background-position': 'center center',
             'background-size': '150%',
             'border': '4px solid #FFFFFF'
         }
-        if(player.E.bestPoints.gte(30))return {
+        if(player.E.bestPoints.gte(30)&&player.E.bestPoints.lt(60))return {
             'color': '#FFFFFF',
-            'background-image': 'url(https://i.postimg.cc/QMvGBwDK/Rating-1.png)',
+            'background-image': 'url(https://i.postimg.cc/5NtChwPn/Rating-31-70.jpg)',
+            'background-position': 'center center',
+            'background-size': '150%',
+            'border': '4px solid #FFFFFF'
+        }
+        if(player.E.bestPoints.gte(60))return {
+            'color': '#FFFFFF',
+            'background-image': 'url(https://i.postimg.cc/N0mRhzp9/Rating-1.png)',
             'background-position': 'center center',
             'background-size': '150%',
             'border': '4px solid #FFFFFF'
@@ -1174,12 +1370,42 @@ return hasMilestone("E",2)
         },
         14: {
             requirementDescription: "最佳中考分数达到 42 (14)",
-            effectDescription: "当前版本毕业！",
+            effectDescription: "解锁一个新层级！",
             done() {
                 return player.E.bestPoints.gte(42)
             },
             unlocked(){
                 return hasMilestone("E",13)
+                            },
+        },
+        15: {
+            requirementDescription: "最佳中考分数达到 51 (15)",
+            effectDescription: "天赋技能指数为0.75。解锁1个全新的天赋技能（很强大！）",
+            done() {
+                return player.E.bestPoints.gte(51)
+            },
+            unlocked(){
+                return hasMilestone("E",14)
+                            },
+        },
+        16: {
+            requirementDescription: "最佳中考分数达到 61 (16)",
+            effectDescription: "英语知识生产快10倍。再度平方经验效应。同时所有文言文类题目解题快50%。",
+            done() {
+                return player.E.bestPoints.gte(61)
+            },
+            unlocked(){
+                return hasMilestone("E",15)
+                            },
+        },
+        17: {
+            requirementDescription: "最佳中考分数达到 69 (17)",
+            effectDescription: "当前版本毕业！",
+            done() {
+                return player.E.bestPoints.gte(69)
+            },
+            unlocked(){
+                return hasMilestone("E",16)
                             },
         },
     },
@@ -1211,6 +1437,7 @@ return hasMilestone("E",2)
         player.E.completedExam = new Decimal(0)
         player.E.ChineseTime = new Decimal(7200)
         player.E.Chinese = new Decimal(0)
+        player.E.English = new Decimal(0)
         player.E.inChinese = new Decimal(1)
         player.E.points = new Decimal(0)
         },
@@ -1302,6 +1529,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte(1e50)) time = time.sub(50)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("Eng",3)) time = time.mul(0.5)
         return time
     },
     unlocked() { return true }, 
@@ -1352,6 +1580,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte(1e100)) time = time.sub(50)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("Eng",3)) time = time.mul(0.5)
         return time
     },
     unlocked() { return true }, 
@@ -1402,6 +1631,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte("1e1000")) time = time.sub(50)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("Eng",3)) time = time.mul(0.5)
         return time
     },
     unlocked() { return true }, 
@@ -1452,6 +1682,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte("1e250")) time = time.sub(50)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("Eng",3)) time = time.mul(0.5)
         return time
     },
     unlocked() { return true }, 
@@ -1503,6 +1734,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte("1e4000")) time = time.sub(100)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("Eng",3)) time = time.mul(0.5)
         return time
     },
     unlocked() { return true }, 
@@ -1553,6 +1785,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte("1e1280")) time = time.sub(50)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("Eng",3)) time = time.mul(0.5)
         return time
     },
     unlocked() { return true }, 
@@ -1603,6 +1836,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte("1e6400")) time = time.sub(100)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("Eng",3)) time = time.mul(0.5)
         return time
     },
     unlocked() { return true }, 
@@ -1653,6 +1887,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte("1e64000")) time = time.sub(150)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("Eng",3)) time = time.mul(0.5)
         return time
     },
     unlocked() { return true }, 
@@ -1703,6 +1938,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte("1e3280")) time = time.sub(50)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("Eng",3)) time = time.mul(0.5)
         return time
     },
     unlocked() { return true }, 
@@ -1753,6 +1989,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte("1e32800")) time = time.sub(100)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("Eng",3)) time = time.mul(0.5)
         return time
     },
     unlocked() { return true }, 
@@ -1803,6 +2040,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte("1e328000")) time = time.sub(200)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("Eng",3)) time = time.mul(0.5)
         return time
     },
     unlocked() { return true }, 
@@ -2159,6 +2397,7 @@ return hasMilestone("E",2)
     buy() { 
     player.E.inChinese = new Decimal(0)  
     player.E.points = player.E.points.add(player.E.Chinese)
+    if(hasMilestone("Eng",0)) player.E.inEnglish = new Decimal(1),player.E.EnglishTime = new Decimal(6000)
     },
     buyMax() {
         // I'll do this later ehehe
@@ -2178,11 +2417,12 @@ return hasMilestone("E",2)
         let display = ("完成你"+player.E.year+"年的中考旅程，并且查询中考分数。你所有科目的对错题情况也会揭晓。<br>*确保你已完成您所有已解锁科目的考试，再点击此处完成中考！")
         return display;
     },
-    unlocked() { return player.E.inExam.gte(1)&&player.E.completedExam.lt(1)&&player.E.inZuowen.lt(1) }, 
+    unlocked() { return player.E.inExam.gte(1)&&player.E.completedExam.lt(1)&&player.E.inZuowen.lt(1)&&player.E.inEnglish.lt(1) }, 
     canAfford() { return true},
     buy() { 
     player.E.completedExam = new Decimal(1)  
     player.E.inChinese = new Decimal(0) 
+    player.E.inEnglish = new Decimal(0)
     },
     buyMax() {
         // I'll do this later ehehe
@@ -2259,7 +2499,7 @@ return hasMilestone("E",2)
     autoed() { return false},
 },
 56: {
-    title(){return "<h3>英语：0/120"},
+    title(){return "<h3>英语："+player.E.English+"/120"},
     gain() { 
         let gain = new Decimal(5)
     return gain
@@ -2507,6 +2747,7 @@ return hasMilestone("E",2)
     if(player.E.points.gte(6))player.Exp.points = player.Exp.points.add((player.E.points.sub(5)).mul(100).mul(tmp.Exp.expMult))
     if(player.E.points.gte(11))player.Exp.points = player.Exp.points.add((player.E.points.sub(10)).mul(10000).mul(tmp.Exp.expMult))
     player.E.inExam = new Decimal(0)
+    player.E.completedEnglish = false
     if(tmp.E.Rank.lt(player.E.rank)) player.E.rank = tmp.E.Rank
     if(player.E.points.gte(player.E.bestPoints)) player.E.bestPoints = player.E.points
     player.E.completedExam = new Decimal(0)
@@ -2575,6 +2816,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte(1e3200)) time = time.sub(60)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("E",15)) time = time.mul(0.5)
         return time
     },
     unlocked() { return hasMilestone("C",2) }, 
@@ -2626,6 +2868,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte(1e320000)) time = time.sub(60)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("E",15)) time = time.mul(0.5)
         return time
     },
     unlocked() { return hasMilestone("C",2) }, 
@@ -2699,6 +2942,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte(1e3200)) time = time.sub(60)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("E",15)) time = time.mul(0.5)
         return time
     },
     unlocked() { return hasMilestone("C",2) }, 
@@ -2736,7 +2980,7 @@ return hasMilestone("E",2)
         if(player.C.points.gte(1e200)) chs = player.C.points.log10().div(1000).mul(100).min(100)
         if(getBuyableAmount("Nf",21).gte(1)) chs = chs.mul(0.7)
         if(getBuyableAmount("Nf",23).gte(1)) chs = chs.mul(1.3).min(100)
-        if(getBuyableAmount("E",71) == 1) chs = chs.mul(1.2)
+        if(getBuyableAmount("E",71) == 1) chs = chs.mul(1.2).min(100)
         if(getBuyableAmount("E",71) == 2) chs = chs.mul(0.6)
         if(getBuyableAmount("E",73).gte(1)) chs = chs.mul(buyableEffect("E",73)).min(100)
         return chs
@@ -2754,6 +2998,7 @@ return hasMilestone("E",2)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
         if(getBuyableAmount("E",71) == 1) time = time.mul(0.8)
         if(getBuyableAmount("E",71) == 2) time = time.mul(2)
+        if(hasMilestone("E",15)) time = time.mul(0.5)
         return time
     },
     unlocked() { return hasMilestone("C",2) }, 
@@ -2846,11 +3091,11 @@ return time
         return display;
     },
     chance(){
-        if(!player.C.points.gte(1e6000)) chs = new Decimal(0.001)
-        if(player.C.points.gte(1e6000)&&!player.C.points.gte(1e8000)) chs = new Decimal(0.01)
-        if(player.C.points.gte(1e8000)&&!player.C.points.gte(1e9000)) chs = new Decimal(0.1)
-        if(player.C.points.gte(1e9000)&&!player.C.points.gte(1e10000)) chs = new Decimal(0.5)
-        if(player.C.points.gte(1e10000)) chs = player.C.points.log10().div(50000).mul(100).min(100)
+        if(!player.C.points.gte("1e6000")) chs = new Decimal(0.001)
+        if(player.C.points.gte("1e6000")&&!player.C.points.gte("1e8000")) chs = new Decimal(0.01)
+        if(player.C.points.gte("1e8000")&&!player.C.points.gte("1e9000")) chs = new Decimal(0.1)
+        if(player.C.points.gte("1e9000")&&!player.C.points.gte("1e10000")) chs = new Decimal(0.5)
+        if(player.C.points.gte("1e10000")) chs = player.C.points.log10().div(50000).mul(100).min(100)
         if(getBuyableAmount("Nf",21).gte(1)) chs = chs.mul(0.7)
         if(getBuyableAmount("Nf",23).gte(1)) chs = chs.mul(1.3).min(100)
         if(getBuyableAmount("E",73).gte(1)) chs = chs.mul(buyableEffect("E",73)).min(100)
@@ -2858,15 +3103,16 @@ return time
     },
     time(){
         let time = new Decimal(2400)
-        if(player.C.points.gte(1e6000)) time = time.sub(720)
-        if(player.C.points.gte(1e8000)) time = time.sub(480)
-        if(player.C.points.gte(1e16000)) time = time.sub(240)
-        if(player.C.points.gte(1e40000)) time = time.sub(240)
-        if(player.C.points.gte(1e80000)) time = time.sub(240)
-        if(player.C.points.gte(1e160000)) time = time.sub(240)
-        if(player.C.points.gte(1e320000)) time = time.sub(120)
+        if(player.C.points.gte("1e6000")) time = time.sub(720)
+        if(player.C.points.gte("1e8000")) time = time.sub(480)
+        if(player.C.points.gte("1e16000")) time = time.sub(240)
+        if(player.C.points.gte("1e40000")) time = time.sub(240)
+        if(player.C.points.gte("1e80000")) time = time.sub(240)
+        if(player.C.points.gte("1e160000")) time = time.sub(240)
+        if(player.C.points.gte("1e320000")) time = time.sub(120)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("E",15)) time = time.mul(0.5)
         return time
     },
     unlocked() { return hasMilestone("C",2) }, 
@@ -2897,11 +3143,11 @@ return time
         return display;
     },
     chance(){
-        if(!player.C.points.gte(1e18000)) chs = new Decimal(0.001)
-        if(player.C.points.gte(1e18000)&&!player.C.points.gte(1e24000)) chs = new Decimal(0.01)
-        if(player.C.points.gte(1e24000)&&!player.C.points.gte(1e28000)) chs = new Decimal(0.1)
-        if(player.C.points.gte(1e28000)&&!player.C.points.gte(1e30000)) chs = new Decimal(0.5)
-        if(player.C.points.gte(1e30000)) chs = player.C.points.log10().div(120000).mul(100).min(100)
+        if(!player.C.points.gte("1e18000")) chs = new Decimal(0.001)
+        if(player.C.points.gte("1e18000")&&!player.C.points.gte("1e24000")) chs = new Decimal(0.01)
+        if(player.C.points.gte("1e24000")&&!player.C.points.gte("1e28000")) chs = new Decimal(0.1)
+        if(player.C.points.gte("1e28000")&&!player.C.points.gte("1e30000")) chs = new Decimal(0.5)
+        if(player.C.points.gte("1e30000")) chs = player.C.points.log10().div(120000).mul(100).min(100)
         if(getBuyableAmount("Nf",21).gte(1)) chs = chs.mul(0.7)
         if(getBuyableAmount("Nf",23).gte(1)) chs = chs.mul(1.3).min(100)
         if(getBuyableAmount("E",73).gte(1)) chs = chs.mul(buyableEffect("E",73)).min(100)
@@ -2911,17 +3157,18 @@ return time
     },
     time(){
         let time = new Decimal(2400)
-        if(player.C.points.gte(1e6000)) time = time.sub(720)
-        if(player.C.points.gte(1e8000)) time = time.sub(480)
-        if(player.C.points.gte(1e16000)) time = time.sub(240)
-        if(player.C.points.gte(1e40000)) time = time.sub(240)
-        if(player.C.points.gte(1e80000)) time = time.sub(240)
-        if(player.C.points.gte(1e160000)) time = time.sub(240)
-        if(player.C.points.gte(1e320000)) time = time.sub(120)
+        if(player.C.points.gte("1e6000")) time = time.sub(720)
+        if(player.C.points.gte("1e8000")) time = time.sub(480)
+        if(player.C.points.gte("1e16000")) time = time.sub(240)
+        if(player.C.points.gte("1e40000")) time = time.sub(240)
+        if(player.C.points.gte("1e80000")) time = time.sub(240)
+        if(player.C.points.gte("1e160000")) time = time.sub(240)
+        if(player.C.points.gte("1e320000")) time = time.sub(120)
         if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
         if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
         if(getBuyableAmount("E",75) == 1) time = time.mul(0.8)
         if(getBuyableAmount("E",75) == 2) time = time.mul(2)
+        if(hasMilestone("E",15)) time = time.mul(0.5)
         return time
     },
     unlocked() { return hasMilestone("C",2) }, 
@@ -2981,6 +3228,7 @@ return time
         if(getBuyableAmount("E",75) == 2) time = time.mul(1.4)
         if(getBuyableAmount("E",76) == 1) time = time.mul(0.8)
         if(getBuyableAmount("E",76) == 2) time = time.mul(2)
+        if(hasMilestone("E",15)) time = time.mul(0.5)
         return time
     },
     unlocked() { return hasMilestone("C",2) }, 
@@ -3262,7 +3510,7 @@ return time
         if(player.E.ccRandom0 == 8)display = "<h3>作文题目：盲人与心眼<br>"
         if(player.E.ccRandom0 == 9)display = "<h3>作文题目：故乡<br>"
         if(player.E.ccRandom0 == 10)display = "<h3>作文题目：救赎与拯救<br>"
-        subdisplay = "要求：①请正确填写此作文专用答题卡上的个人信息；②立意自定，文休自选（诗歌除外）；③文中不要出现真实的地各、校名、人名；④书写工整．不少于600字。"
+        subdisplay = "要求：①请正确填写此作文专用答题卡上的个人信息；②立意自定，文休自选（诗歌除外）；③文中不要出现真实的地名、校名、人名；④书写工整．不少于600字。"
         return display + subdisplay;
     },
     unlocked() { return hasMilestone("E",10) }, 
@@ -3313,8 +3561,8 @@ return time
     unlocked() { return player.E.inZuowen.gte(1) }, 
     canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-    player.E.sixiang = player.E.sixiang.add(10)
-    player.E.wenbi = player.E.wenbi.add(5)
+    player.E.sixiang = player.E.sixiang.add(10).min(300)
+    player.E.wenbi = player.E.wenbi.add(5).min(300)
     player.E.ccSelected1 = player.E.ccSelected1.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -3340,8 +3588,8 @@ return time
     unlocked() { return player.E.inZuowen.gte(1) }, 
     canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-    player.E.xiangxiang = player.E.xiangxiang.add(5)
-    player.E.wenbi = player.E.wenbi.add(10)
+    player.E.xiangxiang = player.E.xiangxiang.add(5).min(300)
+    player.E.wenbi = player.E.wenbi.add(10).min(300)
     player.E.ccSelected1 = player.E.ccSelected1.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -3367,9 +3615,9 @@ return time
     unlocked() { return player.E.inZuowen.gte(1) }, 
     canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-    player.E.sixiang = player.E.sixiang.add(5)
-    player.E.wenbi = player.E.wenbi.add(5)
-    player.E.luoji = player.E.luoji.add(5)
+    player.E.sixiang = player.E.sixiang.add(5).min(300)
+    player.E.wenbi = player.E.wenbi.add(5).min(300)
+    player.E.luoji = player.E.luoji.add(5).min(300)
     player.E.ccSelected1 = player.E.ccSelected1.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -3395,8 +3643,8 @@ return time
     unlocked() { return getBuyableAmount("Exp",54).gte(1)&&player.E.ccRandom1.gte(0)&&player.E.inZuowen.gte(1) }, 
     canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-    player.E.xiangxiang = player.E.xiangxiang.sub(5)
-    player.E.luoji = player.E.luoji.add(30)
+    player.E.xiangxiang = player.E.xiangxiang.sub(5).min(300)
+    player.E.luoji = player.E.luoji.add(30).min(300)
     player.E.ccSelected1 = player.E.ccSelected1.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -3422,8 +3670,8 @@ return time
     unlocked() { return getBuyableAmount("Exp",54).gte(2)&&player.E.ccRandom1.gte(1)&&player.E.ccRandom1.lt(9)&&player.E.inZuowen.gte(1) }, 
     canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-    player.E.xiangxiang = player.E.xiangxiang.add(15)
-    player.E.wenbi = player.E.wenbi.add(10)
+    player.E.xiangxiang = player.E.xiangxiang.add(15).min(300)
+    player.E.wenbi = player.E.wenbi.add(10).min(300)
     player.E.ccSelected1 = player.E.ccSelected1.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -3449,8 +3697,8 @@ return time
     unlocked() { return getBuyableAmount("Exp",54).gte(3)&&player.E.ccRandom1.gte(0)&&player.E.ccRandom1.lt(10)&&player.E.inZuowen.gte(1) }, 
     canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-    player.E.sixiang = player.E.sixiang.add(15)
-    player.E.luoji = player.E.luoji.add(10)
+    player.E.sixiang = player.E.sixiang.add(15).min(300)
+    player.E.luoji = player.E.luoji.add(10).min(300)
     player.E.ccSelected1 = player.E.ccSelected1.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -3476,9 +3724,9 @@ return time
     unlocked() { return getBuyableAmount("Exp",54).gte(4)&&player.E.ccRandom1.gte(0)&&player.E.inZuowen.gte(1) }, 
     canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-    player.E.xiangxiang = player.E.xiangxiang.add(15)
-    player.E.wenbi = player.E.wenbi.add(10)
-    player.E.sixiang = player.E.sixiang.add(5)
+    player.E.xiangxiang = player.E.xiangxiang.add(15).min(300)
+    player.E.wenbi = player.E.wenbi.add(10).min(300)
+    player.E.sixiang = player.E.sixiang.add(5).min(300)
     player.E.ccSelected1 = player.E.ccSelected1.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -3504,9 +3752,9 @@ return time
     unlocked() { return getBuyableAmount("Exp",54).gte(5)&&player.E.ccRandom1.gte(0)&&player.E.ccRandom1.lt(10)&&player.E.inZuowen.gte(1) }, 
     canAfford() { return player.E.ccSelected1.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-        player.E.luoji = player.E.luoji.add(15)
-        player.E.wenbi = player.E.wenbi.add(10)
-        player.E.sixiang = player.E.sixiang.add(5)
+        player.E.luoji = player.E.luoji.add(15).min(300)
+        player.E.wenbi = player.E.wenbi.add(10).min(300)
+        player.E.sixiang = player.E.sixiang.add(5).min(300)
     player.E.ccSelected1 = player.E.ccSelected1.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -3554,8 +3802,8 @@ return time
     unlocked() { return player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1) }, 
     canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-    player.E.luoji = player.E.luoji.pow(1.05).floor()
-    player.E.wenbi = player.E.wenbi.pow(1.1).floor()
+    player.E.luoji = player.E.luoji.pow(1.05).floor().min(300)
+    player.E.wenbi = player.E.wenbi.pow(1.1).floor().min(300)
     player.E.ccSelected2 = player.E.ccSelected2.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -3581,8 +3829,8 @@ return time
     unlocked() { return player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1) }, 
     canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-    player.E.sixiang = player.E.sixiang.pow(1.1).floor()
-    player.E.wenbi = player.E.wenbi.pow(1.05).floor()
+    player.E.sixiang = player.E.sixiang.pow(1.1).floor().min(300)
+    player.E.wenbi = player.E.wenbi.pow(1.05).floor().min(300)
     player.E.ccSelected2 = player.E.ccSelected2.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -3608,8 +3856,8 @@ return time
     unlocked() { return player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1) }, 
     canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-    player.E.sixiang = player.E.sixiang.pow(1.05).floor()
-    player.E.xiangxiang = player.E.xiangxiang.pow(1.1).floor()
+    player.E.sixiang = player.E.sixiang.pow(1.05).floor().min(300)
+    player.E.xiangxiang = player.E.xiangxiang.pow(1.1).floor().min(300)
     player.E.ccSelected2 = player.E.ccSelected2.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -3735,7 +3983,9 @@ return time
         else if(player.E.ccPoints.lt(20000))display = "<h1>C"
         else if(player.E.ccPoints.lt(50000))display = "<h1>C+"
         else if(player.E.ccPoints.lt(100000))display = "<h1>C++"
-        else if(player.E.ccPoints.lt(1000000))display = "<h1>B"
+        else if(player.E.ccPoints.lt(200000))display = "<h1>B"
+        else if(player.E.ccPoints.lt(500000))display = "<h1>B+"
+        else if(player.E.ccPoints.lt(1000000))display = "<h1>B++"
         return display;
     },
     unlocked() { return player.E.story.gte(2) }, 
@@ -3926,8 +4176,8 @@ return time
     unlocked() { return getBuyableAmount("Exp",61).gte(1)&&player.E.ccRandom2.gte(0)&&player.E.ccRandom2.lt(9)&&player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1) }, 
     canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-        player.E.wenbi = player.E.wenbi.pow(1.2).floor()
-        player.E.xiangxiang = player.E.xiangxiang.pow(1.05).floor()
+        player.E.wenbi = player.E.wenbi.pow(1.2).floor().min(300)
+        player.E.xiangxiang = player.E.xiangxiang.pow(1.05).floor().min(300)
     player.E.ccSelected2 = player.E.ccSelected2.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -3953,8 +4203,8 @@ return time
     unlocked() { return getBuyableAmount("Exp",61).gte(2)&&player.E.ccRandom2.gte(0)&&player.E.ccRandom2.lt(10)&&player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1) }, 
     canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-        player.E.luoji = player.E.luoji.pow(1.2).floor()
-        player.E.sixiang = player.E.sixiang.pow(1.05).floor()
+        player.E.luoji = player.E.luoji.pow(1.2).floor().min(300)
+        player.E.sixiang = player.E.sixiang.pow(1.05).floor().min(300)
     player.E.ccSelected2 = player.E.ccSelected2.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -3980,8 +4230,8 @@ return time
     unlocked() { return getBuyableAmount("Exp",61).gte(3)&&player.E.ccRandom2.gte(0)&&player.E.ccRandom2.lt(10)&&player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1) }, 
     canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-        player.E.luoji = player.E.luoji.pow(1.2).floor()
-        player.E.xiangxiang = player.E.xiangxiang.pow(1.1).floor()
+        player.E.luoji = player.E.luoji.pow(1.2).floor().min(300)
+        player.E.xiangxiang = player.E.xiangxiang.pow(1.1).floor().min(300)
     player.E.ccSelected2 = player.E.ccSelected2.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -4007,8 +4257,8 @@ return time
     unlocked() { return getBuyableAmount("Exp",61).gte(4)&&player.E.ccRandom2.gte(0)&&player.E.ccRandom2.lt(10)&&player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1)}, 
     canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-        player.E.wenbi = player.E.wenbi.pow(1.25).floor()
-        player.E.sixiang = player.E.sixiang.pow(0.9).floor()
+        player.E.wenbi = player.E.wenbi.pow(1.25).floor().min(300)
+        player.E.sixiang = player.E.sixiang.pow(0.9).floor().min(300)
     player.E.ccSelected2 = player.E.ccSelected2.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -4034,9 +4284,9 @@ return time
     unlocked() { return getBuyableAmount("Exp",61).gte(4)&&player.E.ccRandom2.gte(0)&&player.E.ccRandom2.lt(10)&&player.E.inZuowen.gte(1)&&player.E.ccSelected1.lt(1) }, 
     canAfford() { return player.E.ccSelected2.gte(1)&&getBuyableAmount(this.layer,this.id).lt(1)},
     buy() { 
-        player.E.wenbi = player.E.wenbi.pow(1.1).floor()
-        player.E.luoji = player.E.luoji.pow(1.1).floor()
-        player.E.xiangxiang = player.E.xiangxiang.pow(1.1).floor()
+        player.E.wenbi = player.E.wenbi.pow(1.1).floor().min(300)
+        player.E.luoji = player.E.luoji.pow(1.1).floor().min(300)
+        player.E.xiangxiang = player.E.xiangxiang.pow(1.1).floor().min(300)
     player.E.ccSelected2 = player.E.ccSelected2.sub(1)
     setBuyableAmount(this.layer,this.id,new Decimal(1))
     },
@@ -4047,7 +4297,2590 @@ return time
     if(getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#268240", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#48A461",'border-radius': "10px", height: "100px", width: "200px"}},
     autoed() { return false},
 },
+114: {
+    title(){return player.E.year+"年天津市初中学业水平考试试卷<br><h1>英语<h1>"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        let display = ("本试卷分为第I卷（选择题）、第II卷两部分。第I卷为第1页至第8页。第II卷为第9页至第12页。<br>试卷满分120分，答题时间100min。<h4>剩余时间:<h2>"+player.E.EnglishTime+"s<h2><h4>祝你考试顺利！<h4>")
+        return display;
+    },
+    unlocked() { return true }, 
+    canAfford() { return false},
+    buy() { 
+         
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "150px", width: "600px"}},
+    autoed() { return false},
+},
+115: {
+    title(){return "<h2>一、听力理解<h2>"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        let display = ("本大题共20小题，每小题1分，共20分。")
+        return display;
+    },
+    unlocked() { return true }, 
+    canAfford() { return false},
+    buy() { 
+         
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "60px", width: "600px"}},
+    autoed() { return false},
+},
+116: {
+    title(){return "交卷！"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        if(player.E.inEnglish.gte(1))display = ("完成你本次中考英语科目的考试。<br>*交卷后无法对英语科目答题卡进行操作！<br><h4 style='color:#FFFF00;text-shadow:0px 0px 10px;'>请慎重交卷，在交卷前认真检查答题卡！<h4>")
+        if(player.E.inEnglish.lt(1))display = ("您已完成本次中考英语科目的考试。努力完成剩余科目的考试吧！")
+        return display;
+    },
+    unlocked() { return true }, 
+    canAfford() { return player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.inEnglish = new Decimal(0)  
+    player.E.points = player.E.points.add(player.E.English)
+    player.E.completedEnglish = true
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.inEnglish.gte(1))return {'background-color': "#888800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FFFF00",'border-radius': "10px", height: "100px", width: "300px"}
+    if(player.E.inEnglish.lt(1))return {'background-color': "#000000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FFFFFF",'border-radius': "10px", height: "100px", width: "300px"}},
+    autoed() { return false},
+},
+117: {
+    title(){return "(5分)听力理解-难度1"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "本行题目推荐英语知识：10~320"
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(6)) return new Decimal(0.001)
+        if(player.Eng.power.gte(6)&&!player.Eng.power.gte(7)) return new Decimal(0.01)
+        if(player.Eng.power.gte(7)&&!player.Eng.power.gte(8)) return new Decimal(0.1)
+        if(player.Eng.power.gte(8)&&!player.Eng.power.gte(10)) return new Decimal(0.5)
+        if(player.Eng.power.gte(10)) return player.Eng.power.log10().div(1).mul(100).min(100)
 
+        
+    },
+    time(){
+        let time = new Decimal(100)
+        if(player.Eng.power.gte(6)) time = time.sub(30)
+        if(player.Eng.power.gte(8)) time = time.sub(20)
+        if(player.Eng.power.gte(10)) time = time.sub(10)
+        if(player.Eng.power.gte(20)) time = time.sub(10)
+        if(player.Eng.power.gte(40)) time = time.sub(10)
+        if(player.Eng.power.gte(60)) time = time.sub(10)
+        if(player.Eng.power.gte(80)) time = time.sub(5)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return !getBuyableAmount("E",118).gte(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    buyBuyable("E",118)
+    buyBuyable("E",119)
+    buyBuyable("E",120)
+    buyBuyable("E",121)
+    buyBuyable("E",122)
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "170px"}},
+    autoed() { return false},
+},
+118: {
+    title(){return "<h1>1."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(6)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(6)&&!player.Eng.power.gte(7)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(7)&&!player.Eng.power.gte(8)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(8)&&!player.Eng.power.gte(10)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(10)) time = player.Eng.power.log10().div(1).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    time(){
+        let time = new Decimal(100)
+        if(player.Eng.power.gte(6)) time = time.sub(30)
+        if(player.Eng.power.gte(8)) time = time.sub(20)
+        if(player.Eng.power.gte(10)) time = time.sub(10)
+        if(player.Eng.power.gte(20)) time = time.sub(10)
+        if(player.Eng.power.gte(40)) time = time.sub(10)
+        if(player.Eng.power.gte(60)) time = time.sub(10)
+        if(player.Eng.power.gte(80)) time = time.sub(5)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        return true
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+119: {
+    title(){return "<h1>2."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(12)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(12)&&!player.Eng.power.gte(14)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(14)&&!player.Eng.power.gte(16)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(16)&&!player.Eng.power.gte(20)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(20)) time = player.Eng.power.log10().div(1).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    time(){
+        let time = new Decimal(100)
+        if(player.Eng.power.gte(6)) time = time.sub(30)
+        if(player.Eng.power.gte(8)) time = time.sub(20)
+        if(player.Eng.power.gte(10)) time = time.sub(10)
+        if(player.Eng.power.gte(20)) time = time.sub(10)
+        if(player.Eng.power.gte(40)) time = time.sub(10)
+        if(player.Eng.power.gte(60)) time = time.sub(10)
+        if(player.Eng.power.gte(80)) time = time.sub(5)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+120: {
+    title(){return "<h1>3."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(20)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(20)&&!player.Eng.power.gte(40)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(40)&&!player.Eng.power.gte(50)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(50)&&!player.Eng.power.gte(60)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(60)) time = player.Eng.power.log10().div(2).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    time(){
+        let time = new Decimal(100)
+        if(player.Eng.power.gte(6)) time = time.sub(30)
+        if(player.Eng.power.gte(8)) time = time.sub(20)
+        if(player.Eng.power.gte(10)) time = time.sub(10)
+        if(player.Eng.power.gte(20)) time = time.sub(10)
+        if(player.Eng.power.gte(40)) time = time.sub(10)
+        if(player.Eng.power.gte(60)) time = time.sub(10)
+        if(player.Eng.power.gte(80)) time = time.sub(5)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+121: {
+    title(){return "<h1>4."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(40)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(40)&&!player.Eng.power.gte(80)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(80)&&!player.Eng.power.gte(160)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(160)&&!player.Eng.power.gte(320)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(320)) time = player.Eng.power.log10().div(3).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    time(){
+        let time = new Decimal(100)
+        if(player.Eng.power.gte(6)) time = time.sub(30)
+        if(player.Eng.power.gte(8)) time = time.sub(20)
+        if(player.Eng.power.gte(10)) time = time.sub(10)
+        if(player.Eng.power.gte(20)) time = time.sub(10)
+        if(player.Eng.power.gte(40)) time = time.sub(10)
+        if(player.Eng.power.gte(60)) time = time.sub(10)
+        if(player.Eng.power.gte(80)) time = time.sub(5)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+122: {
+    title(){return "<h1>5."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(80)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(80)&&!player.Eng.power.gte(160)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(160)&&!player.Eng.power.gte(320)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(320)&&!player.Eng.power.gte(640)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(640)) time = player.Eng.power.log10().div(4).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    time(){
+        let time = new Decimal(100)
+        if(player.Eng.power.gte(6)) time = time.sub(30)
+        if(player.Eng.power.gte(8)) time = time.sub(20)
+        if(player.Eng.power.gte(10)) time = time.sub(10)
+        if(player.Eng.power.gte(20)) time = time.sub(10)
+        if(player.Eng.power.gte(40)) time = time.sub(10)
+        if(player.Eng.power.gte(60)) time = time.sub(10)
+        if(player.Eng.power.gte(80)) time = time.sub(5)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+123: {
+    title(){return "(5分)听力理解-难度2"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "本行题目推荐英语知识：1e6~1e10"
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e4)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e4)&&!player.Eng.power.gte(5e4)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(5e4)&&!player.Eng.power.gte(1e5)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e5)&&!player.Eng.power.gte(1e6)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e6)) time = player.Eng.power.log10().div(12).mul(100).min(100)
+
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e3)) time = time.sub(60)
+        if(player.Eng.power.gte(1e6)) time = time.sub(40)
+        if(player.Eng.power.gte(1e9)) time = time.sub(20)
+        if(player.Eng.power.gte(1e12)) time = time.sub(20)
+        if(player.Eng.power.gte(1e15)) time = time.sub(20)
+        if(player.Eng.power.gte(1e18)) time = time.sub(20)
+        if(player.Eng.power.gte(1e21)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return !getBuyableAmount("E",124).gte(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    buyBuyable("E",124)
+    buyBuyable("E",125)
+    buyBuyable("E",126)
+    buyBuyable("E",127)
+    buyBuyable("E",128)
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "170px"}},
+    autoed() { return false},
+},
+124: {
+    title(){return "<h1>6."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e4)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e4)&&!player.Eng.power.gte(5e4)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(5e4)&&!player.Eng.power.gte(1e5)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e5)&&!player.Eng.power.gte(1e6)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e6)) time = player.Eng.power.log10().div(12).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e3)) time = time.sub(60)
+        if(player.Eng.power.gte(1e6)) time = time.sub(40)
+        if(player.Eng.power.gte(1e9)) time = time.sub(20)
+        if(player.Eng.power.gte(1e12)) time = time.sub(20)
+        if(player.Eng.power.gte(1e15)) time = time.sub(20)
+        if(player.Eng.power.gte(1e18)) time = time.sub(20)
+        if(player.Eng.power.gte(1e21)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+125: {
+    title(){return "<h1>7."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e5)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e5)&&!player.Eng.power.gte(5e5)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(5e5)&&!player.Eng.power.gte(1e6)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e6)&&!player.Eng.power.gte(1e7)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e7)) time = player.Eng.power.log10().div(14).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e3)) time = time.sub(60)
+        if(player.Eng.power.gte(1e6)) time = time.sub(40)
+        if(player.Eng.power.gte(1e9)) time = time.sub(20)
+        if(player.Eng.power.gte(1e12)) time = time.sub(20)
+        if(player.Eng.power.gte(1e15)) time = time.sub(20)
+        if(player.Eng.power.gte(1e18)) time = time.sub(20)
+        if(player.Eng.power.gte(1e21)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+126: {
+    title(){return "<h1>8."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e6)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e6)&&!player.Eng.power.gte(5e6)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(5e6)&&!player.Eng.power.gte(1e7)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e7)&&!player.Eng.power.gte(1e8)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e8)) time = player.Eng.power.log10().div(16).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e3)) time = time.sub(60)
+        if(player.Eng.power.gte(1e6)) time = time.sub(40)
+        if(player.Eng.power.gte(1e9)) time = time.sub(20)
+        if(player.Eng.power.gte(1e12)) time = time.sub(20)
+        if(player.Eng.power.gte(1e15)) time = time.sub(20)
+        if(player.Eng.power.gte(1e18)) time = time.sub(20)
+        if(player.Eng.power.gte(1e21)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+127: {
+    title(){return "<h1>9."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e7)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e7)&&!player.Eng.power.gte(5e7)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(5e7)&&!player.Eng.power.gte(1e8)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e8)&&!player.Eng.power.gte(1e9)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e9)) time = player.Eng.power.log10().div(18).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e3)) time = time.sub(60)
+        if(player.Eng.power.gte(1e6)) time = time.sub(40)
+        if(player.Eng.power.gte(1e9)) time = time.sub(20)
+        if(player.Eng.power.gte(1e12)) time = time.sub(20)
+        if(player.Eng.power.gte(1e15)) time = time.sub(20)
+        if(player.Eng.power.gte(1e18)) time = time.sub(20)
+        if(player.Eng.power.gte(1e21)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+128: {
+    title(){return "<h1>10."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e8)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e8)&&!player.Eng.power.gte(5e8)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(5e8)&&!player.Eng.power.gte(1e9)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e9)&&!player.Eng.power.gte(1e10)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e10)) time = player.Eng.power.log10().div(20).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e3)) time = time.sub(60)
+        if(player.Eng.power.gte(1e6)) time = time.sub(40)
+        if(player.Eng.power.gte(1e9)) time = time.sub(20)
+        if(player.Eng.power.gte(1e12)) time = time.sub(20)
+        if(player.Eng.power.gte(1e15)) time = time.sub(20)
+        if(player.Eng.power.gte(1e18)) time = time.sub(20)
+        if(player.Eng.power.gte(1e21)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+129: {
+    title(){return "(5分)听力理解-难度3"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "本行题目推荐英语知识：1e12~1e20"
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e8)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e8)&&!player.Eng.power.gte(1e10)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e10)&&!player.Eng.power.gte(1e12)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e12)&&!player.Eng.power.gte(1e14)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e14)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e6)) time = time.sub(60)
+        if(player.Eng.power.gte(1e12)) time = time.sub(40)
+        if(player.Eng.power.gte(1e18)) time = time.sub(20)
+        if(player.Eng.power.gte(1e24)) time = time.sub(20)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return !getBuyableAmount("E",130).gte(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    buyBuyable("E",130)
+    buyBuyable("E",131)
+    buyBuyable("E",132)
+    buyBuyable("E",133)
+    buyBuyable("E",134)
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "170px"}},
+    autoed() { return false},
+},
+130: {
+    title(){return "<h1>11."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e8)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e8)&&!player.Eng.power.gte(1e10)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e10)&&!player.Eng.power.gte(1e12)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e12)&&!player.Eng.power.gte(1e14)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e14)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e6)) time = time.sub(60)
+        if(player.Eng.power.gte(1e12)) time = time.sub(40)
+        if(player.Eng.power.gte(1e18)) time = time.sub(20)
+        if(player.Eng.power.gte(1e24)) time = time.sub(20)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+131: {
+    title(){return "<h1>12."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e10)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e10)&&!player.Eng.power.gte(1e12)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e12)&&!player.Eng.power.gte(1e14)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e14)&&!player.Eng.power.gte(1e16)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e16)) time = player.Eng.power.log10().div(32).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e6)) time = time.sub(60)
+        if(player.Eng.power.gte(1e12)) time = time.sub(40)
+        if(player.Eng.power.gte(1e18)) time = time.sub(20)
+        if(player.Eng.power.gte(1e24)) time = time.sub(20)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+132: {
+    title(){return "<h1>13."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e12)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e12)&&!player.Eng.power.gte(1e14)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e14)&&!player.Eng.power.gte(1e16)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e16)&&!player.Eng.power.gte(1e18)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e18)) time = player.Eng.power.log10().div(36).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e6)) time = time.sub(60)
+        if(player.Eng.power.gte(1e12)) time = time.sub(40)
+        if(player.Eng.power.gte(1e18)) time = time.sub(20)
+        if(player.Eng.power.gte(1e24)) time = time.sub(20)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+133: {
+    title(){return "<h1>14."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e14)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e14)&&!player.Eng.power.gte(1e16)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e16)&&!player.Eng.power.gte(1e18)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e18)&&!player.Eng.power.gte(1e20)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e20)) time = player.Eng.power.log10().div(40).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e6)) time = time.sub(60)
+        if(player.Eng.power.gte(1e12)) time = time.sub(40)
+        if(player.Eng.power.gte(1e18)) time = time.sub(20)
+        if(player.Eng.power.gte(1e24)) time = time.sub(20)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+134: {
+    title(){return "<h1>15."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e16)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e16)&&!player.Eng.power.gte(1e18)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e18)&&!player.Eng.power.gte(1e20)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e20)&&!player.Eng.power.gte(1e22)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e22)) time = player.Eng.power.log10().div(44).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e6)) time = time.sub(60)
+        if(player.Eng.power.gte(1e12)) time = time.sub(40)
+        if(player.Eng.power.gte(1e18)) time = time.sub(20)
+        if(player.Eng.power.gte(1e24)) time = time.sub(20)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+135: {
+    title(){return "(5分)听力理解-难度4"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "本行题目推荐英语知识：1e30"
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e16)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e16)&&!player.Eng.power.gte(1e20)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e20)&&!player.Eng.power.gte(1e24)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e24)&&!player.Eng.power.gte(1e30)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e30)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e10)) time = time.sub(60)
+        if(player.Eng.power.gte(1e20)) time = time.sub(40)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(20)
+        if(player.Eng.power.gte(1e100)) time = time.sub(20)
+        if(player.Eng.power.gte(1e200)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return !getBuyableAmount("E",136).gte(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    buyBuyable("E",136)
+    buyBuyable("E",137)
+    buyBuyable("E",138)
+    buyBuyable("E",139)
+    buyBuyable("E",140)
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "170px"}},
+    autoed() { return false},
+},
+136: {
+    title(){return "<h1>16."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e16)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e16)&&!player.Eng.power.gte(1e20)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e20)&&!player.Eng.power.gte(1e24)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e24)&&!player.Eng.power.gte(1e30)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e30)) time = player.Eng.power.log10().div(60).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e10)) time = time.sub(60)
+        if(player.Eng.power.gte(1e20)) time = time.sub(40)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(20)
+        if(player.Eng.power.gte(1e100)) time = time.sub(20)
+        if(player.Eng.power.gte(1e200)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+137: {
+    title(){return "<h1>17."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e20)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e20)&&!player.Eng.power.gte(1e24)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e24)&&!player.Eng.power.gte(1e28)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e28)&&!player.Eng.power.gte(1e34)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e34)) time = player.Eng.power.log10().div(68).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e10)) time = time.sub(60)
+        if(player.Eng.power.gte(1e20)) time = time.sub(40)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(20)
+        if(player.Eng.power.gte(1e100)) time = time.sub(20)
+        if(player.Eng.power.gte(1e200)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+138: {
+    title(){return "<h1>18."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e24)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e24)&&!player.Eng.power.gte(1e28)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e28)&&!player.Eng.power.gte(1e32)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e32)&&!player.Eng.power.gte(1e38)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e38)) time = player.Eng.power.log10().div(76).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e10)) time = time.sub(60)
+        if(player.Eng.power.gte(1e20)) time = time.sub(40)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(20)
+        if(player.Eng.power.gte(1e100)) time = time.sub(20)
+        if(player.Eng.power.gte(1e200)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+139: {
+    title(){return "<h1>19."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e28)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e28)&&!player.Eng.power.gte(1e32)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e32)&&!player.Eng.power.gte(1e36)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e36)&&!player.Eng.power.gte(1e40)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e40)) time = player.Eng.power.log10().div(80).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+        
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e10)) time = time.sub(60)
+        if(player.Eng.power.gte(1e20)) time = time.sub(40)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(20)
+        if(player.Eng.power.gte(1e100)) time = time.sub(20)
+        if(player.Eng.power.gte(1e200)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+140: {
+    title(){return "<h1>20."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e32)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e32)&&!player.Eng.power.gte(1e36)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e36)&&!player.Eng.power.gte(1e40)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e40)&&!player.Eng.power.gte(1e44)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e44)) time = player.Eng.power.log10().div(88).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e10)) time = time.sub(60)
+        if(player.Eng.power.gte(1e20)) time = time.sub(40)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(20)
+        if(player.Eng.power.gte(1e100)) time = time.sub(20)
+        if(player.Eng.power.gte(1e200)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+141: {
+    title(){return "<h2>二、单项选择题<h2>"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        let display = ("本大题共15小题，每小题1分，共15分。")
+        return display;
+    },
+    unlocked() { return true }, 
+    canAfford() { return false},
+    buy() { 
+         
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "60px", width: "600px"}},
+    autoed() { return false},
+},
+142: {
+    title(){return "(5分)单项选择-难度1"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "本行题目推荐英语知识：1e20~1e36"
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e10)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e10)&&!player.Eng.power.gte(1e14)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e14)&&!player.Eng.power.gte(1e16)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e16)&&!player.Eng.power.gte(1e20)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e20)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e10)) time = time.sub(60)
+        if(player.Eng.power.gte(1e20)) time = time.sub(40)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(20)
+        if(player.Eng.power.gte(1e100)) time = time.sub(20)
+        if(player.Eng.power.gte(1e200)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return !getBuyableAmount("E",143).gte(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    buyBuyable("E",143)
+    buyBuyable("E",144)
+    buyBuyable("E",145)
+    buyBuyable("E",146)
+    buyBuyable("E",147)
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "170px"}},
+    autoed() { return false},
+},
+143: {
+    title(){return "<h1>21."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e10)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e10)&&!player.Eng.power.gte(1e14)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e14)&&!player.Eng.power.gte(1e16)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e16)&&!player.Eng.power.gte(1e20)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e20)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e10)) time = time.sub(60)
+        if(player.Eng.power.gte(1e20)) time = time.sub(40)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(20)
+        if(player.Eng.power.gte(1e100)) time = time.sub(20)
+        if(player.Eng.power.gte(1e200)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+144: {
+    title(){return "<h1>22."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e12)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e12)&&!player.Eng.power.gte(1e14)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e14)&&!player.Eng.power.gte(1e18)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e18)&&!player.Eng.power.gte(1e22)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e22)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e10)) time = time.sub(60)
+        if(player.Eng.power.gte(1e20)) time = time.sub(40)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(20)
+        if(player.Eng.power.gte(1e100)) time = time.sub(20)
+        if(player.Eng.power.gte(1e200)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+145: {
+    title(){return "<h1>23."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e14)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e14)&&!player.Eng.power.gte(1e16)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e16)&&!player.Eng.power.gte(1e20)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e20)&&!player.Eng.power.gte(1e24)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e24)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e10)) time = time.sub(60)
+        if(player.Eng.power.gte(1e20)) time = time.sub(40)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(20)
+        if(player.Eng.power.gte(1e100)) time = time.sub(20)
+        if(player.Eng.power.gte(1e200)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+146: {
+    title(){return "<h1>24."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e16)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e16)&&!player.Eng.power.gte(1e18)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e18)&&!player.Eng.power.gte(1e22)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e22)&&!player.Eng.power.gte(1e26)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e26)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e10)) time = time.sub(60)
+        if(player.Eng.power.gte(1e20)) time = time.sub(40)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(20)
+        if(player.Eng.power.gte(1e100)) time = time.sub(20)
+        if(player.Eng.power.gte(1e200)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+147: {
+    title(){return "<h1>25."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e18)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e18)&&!player.Eng.power.gte(1e20)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e20)&&!player.Eng.power.gte(1e24)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e24)&&!player.Eng.power.gte(1e28)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e28)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(200)
+        if(player.Eng.power.gte(1e10)) time = time.sub(60)
+        if(player.Eng.power.gte(1e20)) time = time.sub(40)
+        if(player.Eng.power.gte(1e30)) time = time.sub(20)
+        if(player.Eng.power.gte(1e40)) time = time.sub(20)
+        if(player.Eng.power.gte(1e50)) time = time.sub(20)
+        if(player.Eng.power.gte(1e100)) time = time.sub(20)
+        if(player.Eng.power.gte(1e200)) time = time.sub(10)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+148: {
+    title(){return "(5分)单项选择-难度2"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "本行题目推荐英语知识：1e40~1e60"
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e20)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e20)&&!player.Eng.power.gte(1e25)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e25)&&!player.Eng.power.gte(1e30)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e30)&&!player.Eng.power.gte(1e40)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e40)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(300)
+        if(player.Eng.power.gte("1e20")) time = time.sub(90)
+        if(player.Eng.power.gte("1e40")) time = time.sub(60)
+        if(player.Eng.power.gte("1e60")) time = time.sub(30)
+        if(player.Eng.power.gte("1e80")) time = time.sub(30)
+        if(player.Eng.power.gte("1e100")) time = time.sub(30)
+        if(player.Eng.power.gte("1e200")) time = time.sub(30)
+        if(player.Eng.power.gte("1e400")) time = time.sub(15)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return !getBuyableAmount("E",149).gte(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    buyBuyable("E",149)
+    buyBuyable("E",150)
+    buyBuyable("E",151)
+    buyBuyable("E",152)
+    buyBuyable("E",153)
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "170px"}},
+    autoed() { return false},
+},
+149: {
+    title(){return "<h1>26."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e20)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e20)&&!player.Eng.power.gte(1e25)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e25)&&!player.Eng.power.gte(1e30)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e30)&&!player.Eng.power.gte(1e40)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e40)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(300)
+        if(player.Eng.power.gte("1e20")) time = time.sub(90)
+        if(player.Eng.power.gte("1e40")) time = time.sub(60)
+        if(player.Eng.power.gte("1e60")) time = time.sub(30)
+        if(player.Eng.power.gte("1e80")) time = time.sub(30)
+        if(player.Eng.power.gte("1e100")) time = time.sub(30)
+        if(player.Eng.power.gte("1e200")) time = time.sub(30)
+        if(player.Eng.power.gte("1e400")) time = time.sub(15)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+150: {
+    title(){return "<h1>27."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e25)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e25)&&!player.Eng.power.gte(1e30)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e30)&&!player.Eng.power.gte(1e35)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e35)&&!player.Eng.power.gte(1e45)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e45)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(300)
+        if(player.Eng.power.gte("1e20")) time = time.sub(90)
+        if(player.Eng.power.gte("1e40")) time = time.sub(60)
+        if(player.Eng.power.gte("1e60")) time = time.sub(30)
+        if(player.Eng.power.gte("1e80")) time = time.sub(30)
+        if(player.Eng.power.gte("1e100")) time = time.sub(30)
+        if(player.Eng.power.gte("1e200")) time = time.sub(30)
+        if(player.Eng.power.gte("1e400")) time = time.sub(15)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+151: {
+    title(){return "<h1>28."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e30)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e30)&&!player.Eng.power.gte(1e35)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e35)&&!player.Eng.power.gte(1e40)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e40)&&!player.Eng.power.gte(1e50)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e50)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(300)
+        if(player.Eng.power.gte("1e20")) time = time.sub(90)
+        if(player.Eng.power.gte("1e40")) time = time.sub(60)
+        if(player.Eng.power.gte("1e60")) time = time.sub(30)
+        if(player.Eng.power.gte("1e80")) time = time.sub(30)
+        if(player.Eng.power.gte("1e100")) time = time.sub(30)
+        if(player.Eng.power.gte("1e200")) time = time.sub(30)
+        if(player.Eng.power.gte("1e400")) time = time.sub(15)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+152: {
+    title(){return "<h1>29."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e35)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e35)&&!player.Eng.power.gte(1e40)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e40)&&!player.Eng.power.gte(1e45)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e45)&&!player.Eng.power.gte(1e55)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e55)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(300)
+        if(player.Eng.power.gte("1e20")) time = time.sub(90)
+        if(player.Eng.power.gte("1e40")) time = time.sub(60)
+        if(player.Eng.power.gte("1e60")) time = time.sub(30)
+        if(player.Eng.power.gte("1e80")) time = time.sub(30)
+        if(player.Eng.power.gte("1e100")) time = time.sub(30)
+        if(player.Eng.power.gte("1e200")) time = time.sub(30)
+        if(player.Eng.power.gte("1e400")) time = time.sub(15)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+153: {
+    title(){return "<h1>30."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e40)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e40)&&!player.Eng.power.gte(1e45)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e45)&&!player.Eng.power.gte(1e50)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e50)&&!player.Eng.power.gte(1e60)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e60)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(300)
+        if(player.Eng.power.gte("1e20")) time = time.sub(90)
+        if(player.Eng.power.gte("1e40")) time = time.sub(60)
+        if(player.Eng.power.gte("1e60")) time = time.sub(30)
+        if(player.Eng.power.gte("1e80")) time = time.sub(30)
+        if(player.Eng.power.gte("1e100")) time = time.sub(30)
+        if(player.Eng.power.gte("1e200")) time = time.sub(30)
+        if(player.Eng.power.gte("1e400")) time = time.sub(15)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+154: {
+    title(){return "(5分)单项选择-难度3"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "本行题目推荐英语知识：1e70~1e110"
+        return display;
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e40)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e40)&&!player.Eng.power.gte(1e50)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e50)&&!player.Eng.power.gte(1e60)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e60)&&!player.Eng.power.gte(1e70)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e70)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(400)
+        if(player.Eng.power.gte("1e40")) time = time.sub(120)
+        if(player.Eng.power.gte("1e80")) time = time.sub(90)
+        if(player.Eng.power.gte("1e120")) time = time.sub(60)
+        if(player.Eng.power.gte("1e160")) time = time.sub(60)
+        if(player.Eng.power.gte("1e200")) time = time.sub(60)
+        if(player.Eng.power.gte("1e400")) time = time.sub(60)
+        if(player.Eng.power.gte("1e800")) time = time.sub(30)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return !getBuyableAmount("E",155).gte(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    buyBuyable("E",155)
+    buyBuyable("E",156)
+    buyBuyable("E",157)
+    buyBuyable("E",158)
+    buyBuyable("E",159)
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "170px"}},
+    autoed() { return false},
+},
+155: {
+    title(){return "<h1>31."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e40)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e40)&&!player.Eng.power.gte(1e50)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e50)&&!player.Eng.power.gte(1e60)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e60)&&!player.Eng.power.gte(1e70)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e70)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(400)
+        if(player.Eng.power.gte("1e40")) time = time.sub(120)
+        if(player.Eng.power.gte("1e80")) time = time.sub(90)
+        if(player.Eng.power.gte("1e120")) time = time.sub(60)
+        if(player.Eng.power.gte("1e160")) time = time.sub(60)
+        if(player.Eng.power.gte("1e200")) time = time.sub(60)
+        if(player.Eng.power.gte("1e400")) time = time.sub(60)
+        if(player.Eng.power.gte("1e800")) time = time.sub(30)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+156: {
+    title(){return "<h1>32."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e50)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e50)&&!player.Eng.power.gte(1e60)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e60)&&!player.Eng.power.gte(1e70)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e70)&&!player.Eng.power.gte(1e80)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e80)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(400)
+        if(player.Eng.power.gte("1e40")) time = time.sub(120)
+        if(player.Eng.power.gte("1e80")) time = time.sub(90)
+        if(player.Eng.power.gte("1e120")) time = time.sub(60)
+        if(player.Eng.power.gte("1e160")) time = time.sub(60)
+        if(player.Eng.power.gte("1e200")) time = time.sub(60)
+        if(player.Eng.power.gte("1e400")) time = time.sub(60)
+        if(player.Eng.power.gte("1e800")) time = time.sub(30)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+157: {
+    title(){return "<h1>33."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e60)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e60)&&!player.Eng.power.gte(1e70)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e70)&&!player.Eng.power.gte(1e80)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e80)&&!player.Eng.power.gte(1e90)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e90)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(400)
+        if(player.Eng.power.gte("1e40")) time = time.sub(120)
+        if(player.Eng.power.gte("1e80")) time = time.sub(90)
+        if(player.Eng.power.gte("1e120")) time = time.sub(60)
+        if(player.Eng.power.gte("1e160")) time = time.sub(60)
+        if(player.Eng.power.gte("1e200")) time = time.sub(60)
+        if(player.Eng.power.gte("1e400")) time = time.sub(60)
+        if(player.Eng.power.gte("1e800")) time = time.sub(30)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+158: {
+    title(){return "<h1>34."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e70)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e70)&&!player.Eng.power.gte(1e80)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e80)&&!player.Eng.power.gte(1e90)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e90)&&!player.Eng.power.gte(1e100)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e100)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(400)
+        if(player.Eng.power.gte("1e40")) time = time.sub(120)
+        if(player.Eng.power.gte("1e80")) time = time.sub(90)
+        if(player.Eng.power.gte("1e120")) time = time.sub(60)
+        if(player.Eng.power.gte("1e160")) time = time.sub(60)
+        if(player.Eng.power.gte("1e200")) time = time.sub(60)
+        if(player.Eng.power.gte("1e400")) time = time.sub(60)
+        if(player.Eng.power.gte("1e800")) time = time.sub(30)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+159: {
+    title(){return "<h1>35."},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = ""
+        return display;
+    },
+    tooltip()
+    {
+        return "正确概率"+format(this.chance())+"%<br>消耗时间"+format(this.time())+"s"
+    },
+    chance(){
+        if(!player.Eng.power.gte(1e80)) time = new Decimal(0.001)
+        if(player.Eng.power.gte(1e80)&&!player.Eng.power.gte(1e90)) time = new Decimal(0.01)
+        if(player.Eng.power.gte(1e90)&&!player.Eng.power.gte(1e100)) time = new Decimal(0.1)
+        if(player.Eng.power.gte(1e100)&&!player.Eng.power.gte(1e110)) time = new Decimal(0.5)
+        if(player.Eng.power.gte(1e110)) time = player.Eng.power.log10().div(30).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.7)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(1.3).min(100)
+        return time
+
+        
+    },
+    time(){
+        let time = new Decimal(400)
+        if(player.Eng.power.gte("1e40")) time = time.sub(120)
+        if(player.Eng.power.gte("1e80")) time = time.sub(90)
+        if(player.Eng.power.gte("1e120")) time = time.sub(60)
+        if(player.Eng.power.gte("1e160")) time = time.sub(60)
+        if(player.Eng.power.gte("1e200")) time = time.sub(60)
+        if(player.Eng.power.gte("1e400")) time = time.sub(60)
+        if(player.Eng.power.gte("1e800")) time = time.sub(30)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        return time
+    },
+    unlocked() { return true }, 
+    canAfford() { return (!player.E.EnglishTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inEnglish.gte(1)},
+    buy() { 
+    player.E.EnglishTime = player.E.EnglishTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.English = player.E.English.add(1)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "85px", width: "85px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "85px", width: "85px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "85px", width: "85px"}},
+    autoed() { return false},
+},
+160: {
+    title(){return "套作("+player.E.ccBest+"分)"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "花费60分钟将你史上最佳的作文套到答题卡上，并获得"+player.E.ccBest+"分！"
+        return display;
+    },
+    time(){
+        let time = new Decimal(3600)
+        return time
+    },
+    unlocked() { return hasMilestone("C",6)&&player.E.completedZuowen.lt(1) }, 
+    canAfford() { return (!player.E.ChineseTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inChinese.gte(1)&&player.E.inZuowen.lt(1)&&player.E.completedZuowen.lt(1)},
+    buy() { 
+    player.E.Chinese = player.E.Chinese.add(player.E.ccBest)
+    player.E.completedZuowen = new Decimal(1)
+    player.E.ChineseTime = player.E.ChineseTime.sub(this.time())
+    
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "100px", width: "600px"}},
+    autoed() { return false},
+},
+161: {
+    title(){return "<h2>五、(二)名著阅读<h2>"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        let display = ("本大题共3小题，共8分。")
+        return display;
+    },
+    unlocked() { return hasMilestone("Eng",4) }, 
+    canAfford() { return false},
+    buy() { 
+         
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "60px", width: "600px"}},
+    autoed() { return false},
+},
+162: {
+    title(){return "(4分) T22：填写作品、人物表格"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "推荐语文知识：1e500<br>正确概率："+format(this.chance())+"%<br>预计耗时："+format(this.time())+"s<br>点击以解题！"
+        return display;
+    },
+    chance(){
+        if(!player.C.points.gte("1e300")) chs = new Decimal(0.001)
+        if(player.C.points.gte("1e300")&&!player.C.points.gte("1e350")) chs = new Decimal(0.1)
+        if(player.C.points.gte("1e350")&&!player.C.points.gte("1e400")) chs = new Decimal(1)
+        if(player.C.points.gte("1e400")&&!player.C.points.gte("1e500")) chs = new Decimal(5)
+        if(player.C.points.gte("1e500")) chs = player.C.points.log10().div(700).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) chs = chs.mul(0.7)
+         if(getBuyableAmount("Nf",23).gte(1)) chs = chs.mul(1.3).min(100)
+        return chs
+    },
+    time(){
+        let time = new Decimal(1000)
+        if(player.C.points.gte("1e60")) time = time.sub(300)
+        if(player.C.points.gte("1e150")) time = time.sub(200)
+        if(player.C.points.gte("1e280")) time = time.sub(100)
+        if(player.C.points.gte("1e460")) time = time.sub(100)
+        if(player.C.points.gte("1e920")) time = time.sub(100)
+        if(player.C.points.gte("1e1640")) time = time.sub(100)
+        if(player.C.points.gte("1e3280")) time = time.sub(50)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("Eng",3)) time = time.mul(0.5)
+        return time
+    },
+    unlocked() { return hasMilestone("Eng",4) }, 
+    canAfford() { return (!player.E.ChineseTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inChinese.gte(1)},
+    buy() { 
+    player.E.ChineseTime = player.E.ChineseTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.Chinese = player.E.Chinese.add(4)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "100px", width: "200px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "100px", width: "200px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "100px", width: "200px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+163: {
+    title(){return "(2分) T23①：填写名著故事情节"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "推荐语文知识：1e50000<br>正确概率："+format(this.chance())+"%<br>预计耗时："+format(this.time())+"s<br>点击以解题！"
+        return display;
+    },
+    chance(){
+        if(!player.C.points.gte("1e30000")) chs = new Decimal(0.001)
+        if(player.C.points.gte("1e30000")&&!player.C.points.gte("1e35000")) chs = new Decimal(0.1)
+        if(player.C.points.gte("1e35000")&&!player.C.points.gte("1e40000")) chs = new Decimal(1)
+        if(player.C.points.gte("1e40000")&&!player.C.points.gte("1e50000")) chs = new Decimal(5)
+        if(player.C.points.gte("1e50000")) chs = player.C.points.log10().div(125000).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) chs = chs.mul(0.7)
+         if(getBuyableAmount("Nf",23).gte(1)) chs = chs.mul(1.3).min(100)
+        return chs
+    },
+    time(){
+        let time = new Decimal(1000)
+        if(player.C.points.gte("1e6000")) time = time.sub(300)
+        if(player.C.points.gte("1e15000")) time = time.sub(200)
+        if(player.C.points.gte("1e28000")) time = time.sub(100)
+        if(player.C.points.gte("1e46000")) time = time.sub(100)
+        if(player.C.points.gte("1e92000")) time = time.sub(100)
+        if(player.C.points.gte("1e164000")) time = time.sub(100)
+        if(player.C.points.gte("1e328000")) time = time.sub(50)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("Eng",3)) time = time.mul(0.5)
+        return time
+    },
+    unlocked() { return hasMilestone("Eng",4) }, 
+    canAfford() { return (!player.E.ChineseTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inChinese.gte(1)},
+    buy() { 
+    player.E.ChineseTime = player.E.ChineseTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.Chinese = player.E.Chinese.add(2)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "100px", width: "200px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "100px", width: "200px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "100px", width: "200px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
+164: {
+    title(){return "(2分) T23②：分析名著内人物形象"},
+    gain() { 
+        let gain = new Decimal(5)
+    return gain
+},
+    display() { // Everything else displayed in the buyable button after the title
+        let data = tmp[this.layer].buyables[this.id]
+        display = "推荐语文知识：1e500000<br>正确概率："+format(this.chance())+"%<br>预计耗时："+format(this.time())+"s<br>点击以解题！"
+        return display;
+    },
+    chance(){
+        if(!player.C.points.gte("1e300000")) chs = new Decimal(0.001)
+        if(player.C.points.gte("1e300000")&&!player.C.points.gte("1e350000")) chs = new Decimal(0.1)
+        if(player.C.points.gte("1e350000")&&!player.C.points.gte("1e400000")) chs = new Decimal(1)
+        if(player.C.points.gte("1e400000")&&!player.C.points.gte("1e500000")) chs = new Decimal(5)
+        if(player.C.points.gte("1e500000")) chs = player.C.points.log10().div(125000).mul(100).min(100)
+        if(getBuyableAmount("Nf",21).gte(1)) chs = chs.mul(0.7)
+         if(getBuyableAmount("Nf",23).gte(1)) chs = chs.mul(1.3).min(100)
+        return chs
+    },
+    time(){
+        let time = new Decimal(1000)
+        if(player.C.points.gte("1e60000")) time = time.sub(300)
+        if(player.C.points.gte("1e150000")) time = time.sub(200)
+        if(player.C.points.gte("1e280000")) time = time.sub(100)
+        if(player.C.points.gte("1e460000")) time = time.sub(100)
+        if(player.C.points.gte("1e920000")) time = time.sub(100)
+        if(player.C.points.gte("1e1640000")) time = time.sub(100)
+        if(player.C.points.gte("1e3280000")) time = time.sub(50)
+        if(getBuyableAmount("Nf",21).gte(1)) time = time.mul(0.5)
+        if(getBuyableAmount("Nf",23).gte(1)) time = time.mul(2)
+        if(hasMilestone("Eng",3)) time = time.mul(0.5)
+        return time
+    },
+    unlocked() { return hasMilestone("Eng",4) }, 
+    canAfford() { return (!player.E.ChineseTime.lt(this.time()))&&getBuyableAmount(this.layer,this.id).lt(1)&&player.E.inChinese.gte(1)},
+    buy() { 
+    player.E.ChineseTime = player.E.ChineseTime.sub(this.time())
+    if((player.E.random.mul(10)).lt(this.chance())) setBuyableAmount(this.layer,this.id,new Decimal(1)),player.E.Chinese = player.E.Chinese.add(2)
+    else (setBuyableAmount(this.layer,this.id,new Decimal(2)))
+    },
+    buyMax() {
+        // I'll do this later ehehe
+    },
+    style() { if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).lt(1))return {'background-color': "#666666", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#888888",'border-radius': "10px", height: "100px", width: "200px"}
+    if(player.E.completedExam.lt(1)&&getBuyableAmount(this.layer,this.id).gte(1))return {'background-color': "#000088", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0000FF",'border-radius': "10px", height: "100px", width: "200px"}
+    if(player.E.completedExam.gte(1)&&getBuyableAmount(this.layer,this.id)==1)return {'background-color': "#008800", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#00FF00",'border-radius': "10px", height: "100px", width: "200px"}
+    else return {'background-color': "#880000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#FF0000",'border-radius': "10px", height: "100px", width: "200px"}},
+    autoed() { return false},
+},
     },
     Rank(){
 return new Decimal(109123).sub(player.E.points.mul(10))
@@ -4077,7 +6910,7 @@ return freeze
         if(player.E.freeze.gt(0))player.E.freeze = player.E.freeze.sub(new Decimal(5).mul(diff))
         if(player.E.freeze.lt(0))player.E.freeze = new Decimal(0)
     },
-    branches:["C"],
+    branches:["C","Eng"],
     tabFormat:{
         "Main":{
             content:[
@@ -4123,8 +6956,11 @@ return freeze
     ["row",[["buyable",74],["buyable",75],["buyable",76],["buyable",77]]],
     ["row",[["buyable",106]]],
     ["row",[["buyable",107],["buyable",108]]],
+    ["row",[["buyable",161]]],
+    ["row",[["buyable",162],["buyable",163],["buyable",164]]],
     ["row",[["buyable",78]]],
     ["row",[["buyable",79],["buyable",80],["buyable",81]]],
+    ["row",[["buyable",160]]],
     
     ["buyable",51],
     
@@ -4161,11 +6997,31 @@ return freeze
         ["row",[["buyable",98]]],
         ["row",[["buyable",96]]],
         ["row",[["buyable",100]]],
-    
+
     ],
     buttonStyle: {"border-color": "#888888","background-color": "#666666"},  
     style:{"background-color":"#222222"},
     unlocked(){return player.E.inZuowen.gte(1)}
+},
+"English":{
+    content:[
+
+    ["row",[["buyable",114],["buyable",115]]],
+    ["row",[["buyable",117],["buyable",118],["buyable",119],["buyable",120],["buyable",121],["buyable",122]]],
+    ["row",[["buyable",123],["buyable",124],["buyable",125],["buyable",126],["buyable",127],["buyable",128]]],
+    ["row",[["buyable",129],["buyable",130],["buyable",131],["buyable",132],["buyable",133],["buyable",134]]],
+    ["row",[["buyable",135],["buyable",136],["buyable",137],["buyable",138],["buyable",139],["buyable",140]]],
+    ["buyable",141],
+    ["row",[["buyable",142],["buyable",143],["buyable",144],["buyable",145],["buyable",146],["buyable",147]]],
+    ["row",[["buyable",148],["buyable",149],["buyable",150],["buyable",151],["buyable",152],["buyable",153]]],
+    ["row",[["buyable",154],["buyable",155],["buyable",156],["buyable",157],["buyable",158],["buyable",159]]],
+    
+    ["buyable",116],
+    
+    ],
+    buttonStyle: {"border-color": "#909561","background-color": "#808450"},  
+    style:{"background-color":"#404230"},
+    unlocked(){return player.E.inExam.gte(1)&&(player.E.inEnglish.gte(1)||player.E.completedEnglish)}
 },
 "Score":{
     content:[
@@ -10392,6 +13248,11 @@ addLayer("Exp", {
         bought59: false,
         bought60: false,
         bought62: false,
+        bought63: false,
+        bought65: false,
+        bought66: false,
+        bought67: false,
+        bought68: false,
                      // "points" is the internal name for the main resource of the layer.
     }},
     requires: new Decimal(5),
@@ -10422,6 +13283,7 @@ if(getBuyableAmount("C",43).gte(1)) mult = mult.mul(buyableEffect("C",43))
 if(getBuyableAmount("Exp",55).gte(1)) mult = mult.mul(buyableEffect("Exp",55))
 if(player.C.total2.gte(1)) mult = mult.mul(tmp.C.effect2)
 if((getBuyableAmount("Exp",59)).gte(1)) mult = mult.mul(buyableEffect("Exp",59))
+if(player.Eng.points.gte(1)) mult = mult.mul(new Decimal(10).pow(player.Eng.points).min(1e10))
 return mult
     },
     maxBalance()
@@ -10486,6 +13348,7 @@ return mult
         if(hasMilestone("E",4))eff = eff.pow(2)
         if(hasUpgrade("C",25))eff = eff.mul(upgradeEffect("C",25))
         if(hasMilestone("C",4))eff = eff.mul(tmp.C.effectGold2)
+        if(hasMilestone("E",15))eff = eff.pow(2)
         return eff
     },
     tabFormat:{
@@ -10516,7 +13379,7 @@ return mult
     {}],
     "blank",
     ["row",[["buyable",11],["buyable",12],["buyable",13]]],
-    ["row",[["buyable",21],["buyable",57]]],
+    ["row",[["buyable",21],["buyable",57],["buyable",64]]],
     ["row",[["buyable",41]]],
 ],
 unlocked(){return hasMilestone("E",3)},
@@ -10561,6 +13424,15 @@ unlocked(){return hasMilestone("E",7)},
             "blank",
             "blank",
             ["row",[["buyable",62]]],
+            "blank",
+            "blank",
+            ["row",[["buyable",63]]],
+            "blank",
+            "blank",
+            ["row",[["buyable",65],["buyable",66]]],
+            "blank",
+            "blank",
+            ["row",[["buyable",67],["buyable",68]]],
             
         ],
         unlocked(){return hasMilestone("E",11)},
@@ -10589,7 +13461,10 @@ unlocked(){return hasMilestone("E",11)},
           canAfford() { return player.Exp.pp.gte(this.cost())},
           cost(x) {if(!hasMilestone("E",6))return new Decimal(2).pow(x)
           if(hasMilestone("E",6)&&!hasMilestone("E",8))return new Decimal(2).pow((x).sub(1)).floor()
-          if(hasMilestone("E",8))return x},
+          if(hasMilestone("E",8)&&!hasMilestone("Eng",0))return x
+          if(hasMilestone("Eng",0)&&!hasMilestone("C",6)) return x.pow(0.9).floor()
+          if(hasMilestone("C",6)&&!hasMilestone("E",15)) return x.pow(0.8).floor()
+        if(hasMilestone("E",15)) return x.pow(0.75).floor()},
           buy() {
             player.Exp.pp = player.Exp.pp.sub(this.cost())
              setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
@@ -10611,7 +13486,10 @@ unlocked(){return hasMilestone("E",11)},
             title: "技能2：语文知识获取",
             cost(x) {if(!hasMilestone("E",6))return new Decimal(2).pow(x)
             if(hasMilestone("E",6))return new Decimal(2).pow((x).sub(1)).floor()
-            if(hasMilestone("E",8))return x},
+            if(hasMilestone("E",8)&&!hasMilestone("Eng",0))return x
+            if(hasMilestone("Eng",0)&&!hasMilestone("C",6)) return x.pow(0.9).floor()
+            if(hasMilestone("C",6)&&!hasMilestone("E",15)) return x.pow(0.8).floor()
+        if(hasMilestone("E",15)) return x.pow(0.75).floor()},
             canAfford() { return player.Exp.pp.gte(this.cost())},
             buy() {
                 player.Exp.pp = player.Exp.pp.sub(this.cost())
@@ -10635,7 +13513,10 @@ unlocked(){return hasMilestone("E",11)},
             title: "技能3：第一行语文升级效果倍增",
             cost(x) {if(!hasMilestone("E",6))return new Decimal(2).pow(x)
             if(hasMilestone("E",6)&&!hasMilestone("E",8))return new Decimal(2).pow((x).sub(1)).floor()
-            if(hasMilestone("E",8))return x},
+            if(hasMilestone("E",8)&&!hasMilestone("Eng",0))return x
+            if(hasMilestone("Eng",0)&&!hasMilestone("C",6)) return x.pow(0.9).floor()
+            if(hasMilestone("C",6)&&!hasMilestone("E",15)) return x.pow(0.8).floor()
+        if(hasMilestone("E",15)) return x.pow(0.75).floor()},
             canAfford() { return player.Exp.pp.gte(this.cost())},
             buy() {
                 player.Exp.pp = player.Exp.pp.sub(this.cost())
@@ -10656,7 +13537,10 @@ unlocked(){return hasMilestone("E",11)},
             title: "技能4：阅读摘抄能力提升",
             cost(x) {if(!hasMilestone("E",6))return new Decimal(2).pow(x)
             if(hasMilestone("E",6)&&!hasMilestone("E",8))return new Decimal(2).pow((x).sub(1)).floor()
-            if(hasMilestone("E",8))return x},
+            if(hasMilestone("E",8)&&!hasMilestone("Eng",0))return x
+            if(hasMilestone("Eng",0)&&!hasMilestone("C",6)) return x.pow(0.9).floor()
+            if(hasMilestone("C",6)&&!hasMilestone("E",15)) return x.pow(0.8).floor()
+        if(hasMilestone("E",15)) return x.pow(0.75).floor()},
             canAfford() { return player.Exp.pp.gte(this.cost())},
             buy() {
                 player.Exp.pp = player.Exp.pp.sub(this.cost())
@@ -10683,6 +13567,7 @@ unlocked(){return hasMilestone("E",11)},
                setBuyableAmount("Exp",13,new Decimal(0))
                setBuyableAmount("Exp",21,new Decimal(0))
                setBuyableAmount("Exp",57,new Decimal(0))
+               setBuyableAmount("Exp",64,new Decimal(0))
                
                player.Exp.pp = player.Exp.level.add(player.Exp.freepp).sub(player.Exp.treepp)
             },
@@ -10695,7 +13580,7 @@ unlocked(){return hasMilestone("E",11)},
           },
           51: {
             title: "天赋转换器-经验",
-            canAfford() { return player.Exp.points.gte(this.cost())},
+            canAfford() { return player.Exp.points.gte(this.cost())&&getBuyableAmount(this.layer,this.id).lt(20)},
             cost(x) {return new Decimal(100).pow(x)},
             buy() {
                 player.Exp.freepp = player.Exp.freepp.add(1)
@@ -10703,7 +13588,7 @@ unlocked(){return hasMilestone("E",11)},
                 player.Exp.points = player.Exp.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
-            display() {return `将你的经验点数转化为天赋点数。价格：${format(this.cost())}经验点数\n效果：获得${format(this.effect())}个免费天赋点`},
+            display() {return `将你的经验点数转化为天赋点数。(最多转换20个)价格：${format(this.cost())}经验点数\n效果：获得${format(this.effect())}个免费天赋点`},
             effect(x) { 
               return x
             },
@@ -10738,6 +13623,11 @@ unlocked(){return hasMilestone("E",11)},
                setBuyableAmount("Exp",59,new Decimal(0))
                setBuyableAmount("Exp",60,new Decimal(0))
                setBuyableAmount("Exp",62,new Decimal(0))
+               setBuyableAmount("Exp",63,new Decimal(0))
+               setBuyableAmount("Exp",65,new Decimal(0))
+               setBuyableAmount("Exp",66,new Decimal(0))
+               setBuyableAmount("Exp",67,new Decimal(0))
+               setBuyableAmount("Exp",68,new Decimal(0))
             },
             display() {return `重置天赋树并且返还您全部的天赋点数。`},
             effect(x) { 
@@ -10765,7 +13655,7 @@ unlocked(){return hasMilestone("E",11)},
      unlocked(){return true},
      title: "Chinese-11",
      cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(29)
-     if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal("1eeeeeeeee10")},
+     if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(1e309)},
      req(){return new Decimal(18000)},
      canAfford() { return player.Exp.pp.gte(this.cost())&&(player.E.ccPoints.gte(this.req())||player.Exp.bought55)},
      buy() {
@@ -10787,7 +13677,7 @@ unlocked(){return hasMilestone("E",11)},
         unlocked(){return player.Exp.bought55},
         title: "Chinese-21",
         cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(4)
-        if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal("1eeeeeeeee10")},
+        if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(1e309)},
         canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",55).gte(1)},
         buy() {
         
@@ -10809,8 +13699,11 @@ unlocked(){return hasMilestone("E",11)},
             title: "技能5：阅读感悟能力提升",
             cost(x) {if(!hasMilestone("E",6))return new Decimal(2).pow(x)
             if(hasMilestone("E",6)&&!hasMilestone("E",8))return new Decimal(2).pow((x).sub(1)).floor()
-            if(hasMilestone("E",8))return x},
-            canAfford() { return player.Exp.pp.gte(this.cost())},
+            if(hasMilestone("E",8)&&!hasMilestone("Eng",0))return x
+        if(hasMilestone("Eng",0)&&!hasMilestone("C",6)) return x.pow(0.9).floor()
+        if(hasMilestone("C",6)&&!hasMilestone("E",15)) return x.pow(0.8).floor()
+        if(hasMilestone("E",15)) return x.pow(0.75).floor()},
+        canAfford() { return player.Exp.pp.gte(this.cost())},
             buy() {
                 player.Exp.pp = player.Exp.pp.sub(this.cost())
                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
@@ -10830,7 +13723,7 @@ unlocked(){return hasMilestone("E",11)},
             unlocked(){return player.Exp.bought55},
             title: "Chinese-22",
             cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(16)
-            if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal("1eeeeeeeee10")},
+            if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(1e309)},
             canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",55).gte(1)},
             buy() {
             
@@ -10852,7 +13745,7 @@ unlocked(){return hasMilestone("E",11)},
                 unlocked(){return player.Exp.bought57||player.Exp.bought58},
                 title: "Chinese-31",
                 cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(4)
-                if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal("1eeeeeeeee10")},
+                if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(1e309)},
                 canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",56).gte(1)},
                 buy() {
                 
@@ -10874,7 +13767,7 @@ unlocked(){return hasMilestone("E",11)},
                     unlocked(){return player.Exp.bought57||player.Exp.bought58},
                     title: "Chinese-32",
                     cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(4)
-                    if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal("1eeeeeeeee10")},
+                    if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(1e309)},
                     canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",58).gte(1)},
                     buy() {
                     
@@ -10911,7 +13804,7 @@ unlocked(){return hasMilestone("E",11)},
                         unlocked(){return player.Exp.bought59&&player.Exp.bought60},
                         title: "Chinese-41",
                         cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(5)
-                        if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal("1eeeeeeeee10")},
+                        if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(1e309)},
                         canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",59).gte(1)&&getBuyableAmount("Exp",60).gte(1)&&player.C.tier.gte(4)&&player.C.pps.gte(3.5)},
                         buy() {
                         
@@ -10929,6 +13822,140 @@ unlocked(){return hasMilestone("E",11)},
                         if (getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#00BB00", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "5px", height: "240px", width: "240px"}},
                         branches: [["59","yellow",15],["60","yellow",15]],
                         },
+                        63: {
+                            unlocked(){return player.Exp.bought62},
+                            title: "English-11",
+                            cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(7)
+                            if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(1e309)},
+                            canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",62).gte(1)&&player.C.tier.gte(6)},
+                            buy() {
+                            
+                            player.Exp.pp = player.Exp.pp.sub(this.cost())
+                            player.Exp.treepp = player.Exp.treepp.add(this.cost())
+                            player.Exp.bought63 = true
+                            setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                            },
+                            display() {return `价格：${format(this.cost())}天赋点数\n需要：名著阶层到达 6 \n效果：上方研究效果同样对英语知识生效！同时，如果您曾经购买过此研究，则解锁英语网格！\n当前：x${format(this.effect())}`},
+                            effect(x) { 
+                            eff = new Decimal(2).pow(player.C.tier)
+                            return eff
+                            },
+                            style() {  if (!getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "5px", height: "240px", width: "240px"}
+                            if (getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#00BB00", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "5px", height: "240px", width: "240px"}},
+                            branches: ["62"],
+                            },
+                            64: {
+                                title: "技能6：英语知识获取",
+                                cost(x) {if(!hasMilestone("E",6))return new Decimal(2).pow(x)
+                                if(hasMilestone("E",6)&&!hasMilestone("E",8))return new Decimal(2).pow((x).sub(1)).floor()
+                                if(hasMilestone("E",8)&&!hasMilestone("Eng",0))return x
+                            if(hasMilestone("Eng",0)&&!hasMilestone("C",6)) return x.pow(0.9).floor()
+                            if(hasMilestone("C",6)&&!hasMilestone("E",15)) return x.pow(0.8).floor()
+                            if(hasMilestone("E",15)) return x.pow(0.75).floor()},
+                            canAfford() { return player.Exp.pp.gte(this.cost())},
+                                buy() {
+                                    player.Exp.pp = player.Exp.pp.sub(this.cost())
+                                   setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                                   
+                                },
+                                display() {return `增加阅读感悟获取速度。\n当前等级： ${format(getBuyableAmount(this.layer, this.id))}\n价格：${format(this.cost())}天赋点\n效果：阅读感悟获取x${format(this.effect())}`},
+                                effect(x) { 
+                                    let base = new Decimal(1.2)
+                                    if(!player.Exp.bought58)mult2 = base.pow(x)
+                                    if(player.Exp.bought58&&!hasMilestone("E",13))mult2 = base.pow(player.Exp.best22)
+                                    if(hasMilestone("E",13))mult2 = base.pow(player.Exp.best11)
+                                    return mult2},
+                                    style() { return {'border-radius': "5px", height: "200px", width: "200px"}},
+                                unlocked(){return hasMilestone("E",15)}
+                              },
+                              65: {
+                                unlocked(){return player.Exp.bought63},
+                                title: "English-21",
+                                cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(2)
+                                if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(1e309)},
+                                canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",63).gte(1)},
+                                buy() {
+                                
+                                player.Exp.pp = player.Exp.pp.sub(this.cost())
+                                player.Exp.treepp = player.Exp.treepp.add(this.cost())
+                                player.Exp.bought65 = true
+                                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                                },
+                                display() {return `价格：${format(this.cost())}天赋点数\n效果：阅读技能1基础效果提升40%。\n当前：+${format(this.effect().mul(100))}%`},
+                                effect(x) { 
+                                eff = new Decimal(0.4)
+                                return eff
+                                },
+                                style() {  if (!getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "5px", height: "120px", width: "240px"}
+                                if (getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#00BB00", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "5px", height: "120px", width: "240px"}},
+                                branches: ["63"],
+                                },
+                                66: {
+                                    unlocked(){return player.Exp.bought63},
+                                    title: "English-22",
+                                    cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(3)
+                                    if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(1e309)},
+                                    canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",63).gte(1)},
+                                    buy() {
+                                    
+                                    player.Exp.pp = player.Exp.pp.sub(this.cost())
+                                    player.Exp.treepp = player.Exp.treepp.add(this.cost())
+                                    player.Exp.bought66 = true
+                                    setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                                    },
+                                    display() {return `价格：${format(this.cost())}天赋点数\n效果：英语单词效应提升至5次方！\n当前：x${format(this.effect())}`},
+                                    effect(x) { 
+                                    eff = tmp.Eng.ppEffect.pow(4)
+                                    return eff
+                                    },
+                                    style() {  if (!getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "5px", height: "120px", width: "240px"}
+                                    if (getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#00BB00", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "5px", height: "120px", width: "240px"}},
+                                    branches: ["63"],
+                                    },
+                                    67: {
+                                        unlocked(){return player.Exp.bought65&&player.Exp.bought66},
+                                        title: "English-31",
+                                        cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(8)
+                                        if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(1e309)},
+                                        canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",65).gte(1)&&getBuyableAmount("Exp",66).gte(1)},
+                                        buy() {
+                                        
+                                        player.Exp.pp = player.Exp.pp.sub(this.cost())
+                                        player.Exp.treepp = player.Exp.treepp.add(this.cost())
+                                        player.Exp.bought67 = true
+                                        setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                                        },
+                                        display() {return `价格：${format(this.cost())}天赋点数\n效果：大大改良英语语法生产英语知识的公式！\n当前：x^3+1 => 100^(x^1.05)`},
+                                        effect(x) { 
+                                        eff = tmp.Eng.ppEffect.pow(4)
+                                        return eff
+                                        },
+                                        style() {  if (!getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "5px", height: "120px", width: "240px"}
+                                        if (getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#00BB00", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "5px", height: "120px", width: "240px"}},
+                                        branches:[["65","yellow",15],["66","yellow",15]],
+                                        },
+                                        68: {
+                                            unlocked(){return player.Exp.bought65&&player.Exp.bought66},
+                                            title: "English-32",
+                                            cost(x) {if (!getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(8)
+                                            if (getBuyableAmount(this.layer, this.id).gte(1)) return new Decimal(1e309)},
+                                            canAfford() { return player.Exp.pp.gte(this.cost())&&getBuyableAmount("Exp",65).gte(1)&&getBuyableAmount("Exp",66).gte(1)},
+                                            buy() {
+                                            
+                                            player.Exp.pp = player.Exp.pp.sub(this.cost())
+                                            player.Exp.treepp = player.Exp.treepp.add(this.cost())
+                                            player.Exp.bought68 = true
+                                            setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                                            },
+                                            display() {return `价格：${format(this.cost())}天赋点数\n效果：阅读技能5效果始终为-9。\n当前：-${format(this.effect())}`},
+                                            effect(x) { 
+                                            eff = new Decimal(9)
+                                            return eff
+                                            },
+                                            style() {  if (!getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#808450", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#909561",'border-radius': "5px", height: "120px", width: "240px"}
+                                            if (getBuyableAmount(this.layer,this.id).gte(1)) return {'background-color': "#00BB00", filter: "brightness("+new Decimal(100)+"%)", color: "black", 'border-color': "#00FF00",'border-radius': "5px", height: "120px", width: "240px"}},
+                                            branches: [["65","yellow",15],["66","yellow",15]],
+                                            },
         
          
     },
@@ -11197,6 +14224,55 @@ return "A<sup>"+player.A.Goals+"</sup>"
         onComplete() { player.A.Goals = player.A.Goals.add(1) },
             tooltip: "名著等级达到4。",
         },
+        31: {
+            name: "进展开始！（英语）",
+            done() { return player.Eng.points.gte(1) }
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "拥有1个英语语法。",
+        },
+        32: {
+            name: "书是全世界的营养品 III",
+            done() { return player.C.tier.gte(6)}
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "名著等级达到6。",
+        },
+        33: {
+            name: "∞^2",
+            done() { return player.C.points.gte("3.6e616")}
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "拥有 3.6e616 语文知识。",
+        },
+        34: {
+            name: "小学满分作文",
+            done() { return player.E.ccPoints.gte(500000)}
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "作文最佳质量达到500000。",
+        },
+        35: {
+            name: "六十而耳顺",
+            done() { return player.E.bestPoints.gte(60)}
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "最佳中考分数达到60。<br>奖励：因为你卓越的学习能力，你的E层级图标再次变得更酷！",
+        },
+        36: {
+            name: "英语之力",
+            done() { return new Decimal(player.Eng.upgrades.length).gte(1)}
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "购买1个英语网格节点",
+        },
+        37: {
+            name: "Nice.",
+            done() { return player.E.bestPoints.gte(69)}
+        ,
+        onComplete() { player.A.Goals = player.A.Goals.add(1) },
+            tooltip: "最高中考分数达到69。",
+        },
         
     },
     infoboxes: {
@@ -11232,8 +14308,24 @@ return "A<sup>"+player.A.Goals+"</sup>"
             style() { return {borderColor: "#888888",}},
             titleStyle() { return {backgroundColor: "#888888",color: "#FFFFFF"}},
     },
+    3: {
+        title(){return "第2幕-初识英语"},
+        body(){
+                let a = "你的学习成绩在写作之力的加持下继续突飞猛进，作文也越写越好。<br>"
+                let b = "你在学习语文的道路上逐渐感到枯燥了，决定开始学习英语。<br>"
+                let c = "你逐渐掌握了基本的英语语法。<br>"
+                let d = "你的词汇量也开始不断突破，并且在短短几个月内就突破了100！<br>"
+                let e = "英语成绩也实现了0的突破。<br>"
+                let f = "原本身为班里垫底的你，逐渐受到了各科老师的重视！你的威望提高了！<br>"
+                g = ""
+                if(hasMilestone("C",11)) g =""
+                return a + b + c + d + e + f + g
+        },
+        style() { return {borderColor: "#888888",}},
+        titleStyle() { return {backgroundColor: "#888888",color: "#FFFFFF"}},
+},
     },
-    tooltip(){return '已完成成就：' + player.A.Goals + ' / 14<h2>'},
+    tooltip(){return '已完成成就：' + player.A.Goals + ' / 21<h2>'},
     
     tabFormat:{
         "Awaken":{
@@ -11243,7 +14335,7 @@ return "A<sup>"+player.A.Goals+"</sup>"
         ["bar", "NextCD"],
         ["infobox",1],
         ["display-text",
-        function() {return '已完成成就：<h2 style=color:red;text-shadow:0px 0px 10px;>' + player.A.Goals + ' / 14<h2>'},
+        function() {return '已完成成就：<h2 style=color:red;text-shadow:0px 0px 10px;>' + player.A.Goals + ' / 21<h2>'},
             {}],
         "challenges",
         ["row",[["achievement",11],["achievement",12],["achievement",13],["achievement",14],["achievement",15],["achievement",16],["achievement",17],]],
@@ -11265,7 +14357,7 @@ buttonStyle: {"border-color": "#888888"},
 ["bar", "NextCD"],
 ["infobox",2],
 ["display-text",
-function() {return '已完成成就：<h2 style=color:red;text-shadow:0px 0px 10px;>' + player.A.Goals + ' / 14<h2>'},
+function() {return '已完成成就：<h2 style=color:red;text-shadow:0px 0px 10px;>' + player.A.Goals + ' / 21<h2>'},
     {}],
 "challenges",
 ["row",[["achievement",21],["achievement",22],["achievement",23],["achievement",24],["achievement",25],["achievement",26],["achievement",27],]],
@@ -11280,10 +14372,395 @@ function() {return '已完成成就：<h2 style=color:red;text-shadow:0px 0px 10
 , "blank", "blank", ],
 buttonStyle: {"border-color": "#888888","background-color": "#222222"},
 unlocked(){return hasMilestone("E",10)}
+},
+"EnglishStarting":{
+    content:[ "main-display",
+    "prestige-button",
+    
+["bar", "NextCD"],
+["infobox",2],
+["display-text",
+function() {return '已完成成就：<h2 style=color:red;text-shadow:0px 0px 10px;>' + player.A.Goals + ' / 21<h2>'},
+    {}],
+"challenges",
+["row",[["achievement",31],["achievement",32],["achievement",33],["achievement",34],["achievement",35],["achievement",36],["achievement",37],]],
+"grid",
+
+"blank",
+"upgrades",
+"milestones",
+"buyables",
+
+"blank",
+, "blank", "blank", ],
+buttonStyle: {"border-color": "#888888","background-color": "#333333"},
+unlocked(){return hasMilestone("E",14)}
 },},
 
 
 
+})
+addLayer("Eng", {
+    startData() { return {                  // startData is a function that returns default data for a layer. 
+        unlocked: true,                     // You can add more variables here to add them to your layer.
+        points: new Decimal(0),
+        power: new Decimal(0),
+        pp: new Decimal(0),
+        totalpp: new Decimal(0),
+                     // "points" is the internal name for the main resource of the layer.
+    }},
+
+    color: "#909561",                       // The color for this layer, which affects many elements.
+    resource: "英语语法",            // The name of this layer's main prestige resource.
+    row: 0,                                 // The row this layer is on (0 is the first row).
+
+    baseResource: "points",                 // The name of the resource your prestige gain is based on.
+    baseAmount() { return player.points },  // A function to return the current amount of baseResource.
+
+    requires: new Decimal(10),              // The amount of the base needed to  gain 1 of the prestige currency.
+                                            // Also the amount required to unlock the layer.
+
+    type: "normal",                         // Determines the formula used for calculating prestige currency.
+    exponent: 0.5,                          // "normal" prestige gain is (currency^exponent).
+upgrades:{
+    11: {
+        title: "<h1>R1",
+        cost(){return new Decimal(6)},
+        effect(){ let eff = buyableEffect("Exp",58).sqrt().log2().mul(tmp.Eng.gridEffect).max(1)
+        return eff
+        },
+        currencyDisplayName: "英语单词",
+        currencyInternalName: "pp",
+        currencyLayer: "Eng",
+        tooltip(){return "<h4 style='color:#9A0707;text-shadow:0px 0px 10px;'>【阅读感悟 I】<h4><h4>效果：Chinese-22以削弱的效果提升阅读感悟获取。<br>当前：x"+format(this.effect())},
+        unlocked(){return player.Exp.bought63},
+        style() {  if (!hasUpgrade(this.layer,this.id)) return {'background-color': "#000000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#9A0707",'border-radius': "0px", height: "100px", width: "100px"}
+                if (hasUpgrade(this.layer,this.id)) return {'background-color': "#890606", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#9A0707",'border-radius': "0px", height: "100px", width: "100px"}},
+        },
+        21: {
+            title: "<h1>R2",
+            cost(){return new Decimal(11)},
+            effect(){ let eff = buyableEffect("Exp",62).pow(1.5).mul(tmp.Eng.gridEffect)
+            return eff
+            },
+            currencyDisplayName: "英语单词",
+            currencyInternalName: "pp",
+            currencyLayer: "Eng",
+            tooltip(){return "<h4 style='color:#9A0707;text-shadow:0px 0px 10px;'>【阅读感悟 II】<h4><h4>效果：Chinese-41同样生效于阅读感悟获取。<br>当前：x"+format(this.effect())},
+            unlocked(){return hasMilestone("Eng",2)},
+            style() {  if (!hasUpgrade(this.layer,this.id)) return {'background-color': "#000000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#9A0707",'border-radius': "0px", height: "100px", width: "100px"}
+                    if (hasUpgrade(this.layer,this.id)) return {'background-color': "#890606", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#9A0707",'border-radius': "0px", height: "100px", width: "100px"}},
+            },
+            12: {
+                title: "<h1>EngK1",
+                cost(){return new Decimal(8)},
+                effect(){ let eff = player.Eng.points.pow(3).add(10).min(5000).mul(tmp.Eng.gridEffect)
+                return eff
+                },
+                currencyDisplayName: "英语单词",
+                currencyInternalName: "pp",
+                currencyLayer: "Eng",
+                tooltip(){return "<h4 style='color:#BA00A4;text-shadow:0px 0px 10px;'>【英语知识 I】<h4><h4>效果：基于英语语法的数量，降低英语单词的获取阈值。<br>当前：/"+format(this.effect())},
+                unlocked(){return hasMilestone("Eng",2)},
+                style() {  if (!hasUpgrade(this.layer,this.id)) return {'background-color': "#000000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#BA00A4",'border-radius': "0px", height: "100px", width: "100px"}
+                        if (hasUpgrade(this.layer,this.id)) return {'background-color': "#A90093", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#BA00A4",'border-radius': "0px", height: "100px", width: "100px"}},
+                },
+                22: {
+                    title: "<h1>EngK2",
+                    cost(){return new Decimal(10)},
+                    effect(){ let eff = buyableEffect("Exp",57).mul(tmp.Eng.gridEffect)
+                    return eff
+                    },
+                    currencyDisplayName: "英语单词",
+                    currencyInternalName: "pp",
+                    currencyLayer: "Eng",
+                    tooltip(){return "<h4 style='color:#BA00A4;text-shadow:0px 0px 10px;'>【英语知识 II】<h4><h4>效果：天赋技能5效应同样生效于英语知识。<br>当前：x"+format(this.effect())},
+                    unlocked(){return hasMilestone("Eng",2)},
+                    style() {  if (!hasUpgrade(this.layer,this.id)) return {'background-color': "#000000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#BA00A4",'border-radius': "0px", height: "100px", width: "100px"}
+                            if (hasUpgrade(this.layer,this.id)) return {'background-color': "#A90093", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#BA00A4",'border-radius': "0px", height: "100px", width: "100px"}},
+                    },
+
+    
+},
+    gainMult() {                            // Returns your multiplier to your gain of the prestige resource.
+        return new Decimal(1)               // Factor in any bonuses multiplying gain here.
+    },
+    gainExp() {                             // Returns the exponent to your gain of the prestige resource.
+        return new Decimal(1)
+    },
+    gridEffect(){
+        let eff = new Decimal(1)
+        return eff
+    },
+tooltip(){return format(player.Eng.points)+" 英语语法<br>"+format(player.Eng.power)+" 英语知识<br>"+format(player.Eng.pp)+" 英语单词"},
+    layerShown() { return hasMilestone("E",14) },          // Returns a bool for if this layer's node should be visible in the tree.
+readingReq(){
+    let req = new Decimal(5e13)
+    if(player.Eng.points.gte(1)) req = new Decimal(1e23)
+    if(player.Eng.points.gte(2)) req = new Decimal("1e100000000")
+    return req
+},
+pointsReq(){
+    let req = new Decimal("1e390")
+    if(player.Eng.points.gte(1)) req = new Decimal("1e698")
+    if(player.Eng.points.gte(2)) req = new Decimal("1e100000000")
+    return req
+},
+effect(){
+    if(!getBuyableAmount("Exp",67).gte(1)) eff = new Decimal(3).pow(player.Eng.points).sub(1)
+    if(getBuyableAmount("Exp",67).gte(1)) eff = new Decimal(100).pow(player.Eng.points.pow(1.05)).sub(1)
+    if(hasMilestone("C",6)) eff = eff.mul(1000)
+    if(getBuyableAmount("Exp",63).gte(1)) eff = eff.mul(buyableEffect("Exp",63))
+    if(hasMilestone("E",15)) eff = eff.mul(buyableEffect("Exp",64))
+    if(hasUpgrade("Eng",22)) eff = eff.mul(upgradeEffect("Eng",22))
+    if(hasMilestone("E",15)) eff = eff.mul(10)
+    return eff
+},
+effectDescription(){
+    return "每秒生产英语知识<h2 style='color:#909561;text-shadow:0px 0px 10px;'> +"+format(tmp.Eng.effect)+" <h2>"
+},
+
+    buyables:{
+        11: {
+            title: "<b>重置并获得 +1 英语语法",
+            gain() { 
+                let gain = new Decimal(5)
+            return gain
+        },
+            display() { // Everything else displayed in the buyable button after the title
+                let data = tmp[this.layer].buyables[this.id]
+                let display = "需要"+format(player.C.points)+" / "+format(tmp.Eng.pointsReq)+"语文知识<br>需要"+format(player.C.readingPoints)+" / "+format(tmp.Eng.readingReq)+"阅读感悟<br>警告：重置获得英语语法将会重置你语文阅读(包括名著许可前4个等级)的所有内容。同时将您的语文知识与学分开平方根！"
+                return display;
+            },
+            unlocked() { return hasMilestone("C",0)}, 
+            canAfford() { return player.C.readingPoints.gte(tmp.Eng.readingReq)&&player.C.points.gte(tmp.Eng.pointsReq)},
+            buy() { 
+                player.C.tier = new Decimal(0)
+                player.C.balance1 = new Decimal(0)
+                player.C.balance2 = new Decimal(0)
+                player.C.total1 = new Decimal(0)
+                player.C.total2 = new Decimal(0)
+                player.C.totalGold = new Decimal(0)
+                player.C.balanceGold = new Decimal(0)
+                if(!hasMilestone("Eng",1))setBuyableAmount("C",54,new Decimal(0))
+                if(!hasMilestone("Eng",1))setBuyableAmount("C",60,new Decimal(0))
+                if(!hasMilestone("Eng",1))setBuyableAmount("C",61,new Decimal(0))
+                if(!hasMilestone("Eng",1))setBuyableAmount("C",68,new Decimal(0))
+                setBuyableAmount("C",41,new Decimal(0))
+                setBuyableAmount("C",42,new Decimal(0))
+                setBuyableAmount("C",43,new Decimal(0))
+                setBuyableAmount("C",44,new Decimal(0))
+                setBuyableAmount("C",59,new Decimal(0))
+                player.C.readingPoints = new Decimal(1)
+                player.Eng.points = player.Eng.points.add(1)
+                if(!hasMilestone("Eng",2))player.C.pps = new Decimal(1)
+            if(!hasMilestone("Eng",2))player.C.freeze = new Decimal(1)
+            if(!hasMilestone("Eng",2))player.C.power = new Decimal(1)
+            if(!hasMilestone("Eng",2))player.C.brainTier = new Decimal(0)
+                player.C.points = player.C.points.sqrt().floor()
+                player.points = player.points.sqrt().floor()
+                player.Eng.upgrades = []
+                player.Eng.power = new Decimal(0)
+                player.Eng.totalpp = new Decimal(0)
+                player.Eng.pp = new Decimal(0)
+                
+            },
+            buyMax() {
+                // I'll do this later ehehe
+            },
+            style: {'height':'240px', 'width':'240px', 'font-size':'13px','border-radius': "50px",
+                'background-color'() {
+                    let points = player.E.inExam
+                    let color = "#bf8f8f"
+                    if (player.C.readingPoints.gte(tmp.Eng.readingReq)&&player.C.points.gte(tmp.Eng.pointsReq)) color = "#909561"
+                    return color
+                }
+            },
+            
+    },
+    12: {
+        title: "<b>洗点",
+        gain() { 
+            let gain = new Decimal(5)
+        return gain
+    },
+        display() { // Everything else displayed in the buyable button after the title
+            let data = tmp[this.layer].buyables[this.id]
+            let display = "进行一次英语语法重置，洗点您的英语网格，但是保留英语知识和英语语法。"
+            return display;
+        },
+        unlocked() { return hasMilestone("C",0)}, 
+        canAfford() { return true},
+        buy() { 
+            player.C.tier = new Decimal(0)
+            player.C.balance1 = new Decimal(0)
+            player.C.balance2 = new Decimal(0)
+            player.C.total1 = new Decimal(0)
+            player.C.total2 = new Decimal(0)
+            player.C.totalGold = new Decimal(0)
+            player.C.balanceGold = new Decimal(0)
+            if(!hasMilestone("Eng",1))setBuyableAmount("C",54,new Decimal(0))
+            if(!hasMilestone("Eng",1))setBuyableAmount("C",60,new Decimal(0))
+            if(!hasMilestone("Eng",1))setBuyableAmount("C",61,new Decimal(0))
+            if(!hasMilestone("Eng",1))setBuyableAmount("C",68,new Decimal(0))
+            setBuyableAmount("C",41,new Decimal(0))
+            setBuyableAmount("C",42,new Decimal(0))
+            setBuyableAmount("C",43,new Decimal(0))
+            setBuyableAmount("C",44,new Decimal(0))
+            setBuyableAmount("C",59,new Decimal(0))
+            player.C.readingPoints = new Decimal(1)
+            if(!hasMilestone("Eng",2))player.C.pps = new Decimal(1)
+            if(!hasMilestone("Eng",2))player.C.freeze = new Decimal(1)
+            if(!hasMilestone("Eng",2))player.C.power = new Decimal(1)
+            if(!hasMilestone("Eng",2))player.C.brainTier = new Decimal(0)
+            player.C.points = player.C.points.sqrt().floor()
+            player.points = player.points.sqrt().floor()
+            player.Eng.upgrades = []
+            player.Eng.pp = player.Eng.totalpp
+            
+        },
+        buyMax() {
+            // I'll do this later ehehe
+        },
+        style: {'height':'150px', 'width':'150px', 'font-size':'10px','border-radius': "0px",
+            'background-color'() {
+                color = "#909561"
+                return color
+            }
+        },
+        
+},
+},
+update(diff)
+{
+    if(player.Eng.points.gte(1)&&!hasMilestone("C",6)) player.Eng.power = player.Eng.power.add(new Decimal(diff).mul(tmp.Eng.effect))
+    if(player.Eng.points.gte(1)&&player.Eng.power.lt(tmp.Eng.effect.mul(60))&&hasMilestone("C",6)) player.Eng.power = player.Eng.power.add(new Decimal(diff).mul(tmp.Eng.effect))
+    if(player.Eng.points.gte(1)&&player.Eng.power.gte(tmp.Eng.effect.mul(60))&&hasMilestone("C",6)) player.Eng.power = player.Eng.power.add(new Decimal(diff).mul(tmp.Eng.effect).div(1000))
+    if((player.Eng.power).gte(tmp.Eng.limit)) player.Eng.pp = player.Eng.pp.add(1),player.Eng.totalpp = player.Eng.totalpp.add(1)
+    if(hasMilestone("Eng",2)) buyBuyable("C",41)
+    if(hasMilestone("Eng",2)) buyBuyable("C",42)
+    if(hasMilestone("Eng",2)) buyBuyable("C",43)
+    if(hasMilestone("Eng",2)) buyBuyable("C",44)
+    if(hasMilestone("Eng",2)) buyBuyable("C",59)
+},
+
+milestones:{
+    0: {
+        requirementDescription: "1 英语语法(0)",
+        effectDescription: "前10个英语语法中每个获得3倍的阅读感悟和10倍的考试经验，对英语语法重置保留天赋树内容，同时所有天赋技能成本公式由线性变为亚线性。解锁英语考试！",
+        done() {
+            return player.Eng.points.gte(1)
+        }
+    },
+    1: {
+        requirementDescription(){return format(new Decimal(1e8))+" 英语知识(1)"},
+        effectDescription: "英语语法重置不再重置前4等级的名著许可。",
+        done() {
+            return player.Eng.power.gte(1e8)
+        }
+    },
+    2: {
+        requirementDescription: "2 英语语法(2)",
+        effectDescription: "所有阅读感悟技能都可以自动购买。英语语法重置不再重置脑洞相关内容。同时英语网格再次扩展一行一列！",
+        done() {
+            return player.Eng.points.gte(2)
+        }
+    },
+    3: {
+        requirementDescription: "16 总英语单词(3)",
+        effectDescription: "语文所有选择题作答快50%！",
+        done() {
+            return player.Eng.totalpp.gte(16)
+        }
+    },
+    4: {
+        requirementDescription: "同时拥有网格节点R1 和 R2(4)",
+        effectDescription: "在语文考试中追加名著阅读！这项题目占8分！",
+        done() {
+            return hasUpgrade("Eng",11)&&hasUpgrade("Eng",21)
+        }
+    },
+
+},
+    tabFormat:{
+        "Main":{
+            content:[
+            "main-display",
+            "blank",
+            ["display-text",
+    function() {return "您拥有的英语单词数量：<h2 style='color:#909561;text-shadow:0px 0px 10px;'>"+player.Eng.totalpp },
+    {}],
+    ["display-text",
+    function() {return "它们给予了语文知识和学分加成 <h2 style='color:#909561;text-shadow:0px 0px 10px;'>"+format(tmp.Eng.ppEffect)+"x" },
+    {}],
+            ["bar","NextCD"],
+            "blank",
+            ["buyable",11],
+
+"blank",
+, "blank", "blank", ]
+},
+ "Milestones":{
+            content:[
+            "milestones",
+            ]
+},
+"Grid":{
+    content:[
+        ["display-text",
+    function() {return "您剩余可分配的英语单词数量：<h2 style='color:#909561;text-shadow:0px 0px 10px;'>"+player.Eng.pp },
+    {}],
+    ["display-text",
+    function() {return "英语网格力量：<h2 style='color:#909561;text-shadow:0px 0px 10px;'>"+format(tmp.Eng.gridEffect.mul(100))+"%" },
+    {}],
+    ["display-text",
+    function() {return "Tips:每次重置获取英语知识都会强制重置您英语网格的全部节点，并且重置您的英语单词&英语知识到0！"},
+    {}],
+    ["buyable",12],
+    "blank",
+    
+        "upgrades",
+    ],
+    
+},
+    },
+    bars:{
+
+        NextCD: {
+            direction: RIGHT,
+            width: 700,
+            height: 30,
+            fillStyle: {'background-color' : "#909561"},
+            Style: {'background-color' : "#909561"},
+            req() {
+                let req =new Decimal("1e3500")
+                return req
+            },
+            display() {
+
+                let r = "您需要 " + format(player.Eng.power) + " / " + format(tmp.Eng.limit)+ " 英语知识以获得下一个英语单词。"
+                return r
+            },
+            progress() { 
+                let f = player.Eng.power
+                let p = f.div(tmp.Eng.limit)
+                return p
+            },
+        },
+    },
+    limit()
+    {
+        let lim = new Decimal(1).mul(new Decimal(10).pow(player.Eng.totalpp.add(1)))
+        if(hasUpgrade("Eng",12)) lim = lim.div(upgradeEffect("Eng",12))
+        return lim
+    },
+    ppEffect()
+    {
+let base = new Decimal(25)
+let eff = base.pow(player.Eng.totalpp)
+if(getBuyableAmount("Exp",66).gte(1)) eff = eff.pow(5)
+return eff
+    },
 })
 function examReset()
 {
@@ -11333,6 +14810,44 @@ function examReset()
     setBuyableAmount("E",111,new Decimal(0))
     setBuyableAmount("E",112,new Decimal(0))
     setBuyableAmount("E",113,new Decimal(0))
+    setBuyableAmount("E",118,new Decimal(0))
+    setBuyableAmount("E",119,new Decimal(0))
+    setBuyableAmount("E",120,new Decimal(0))
+    setBuyableAmount("E",121,new Decimal(0))
+    setBuyableAmount("E",122,new Decimal(0))
+    setBuyableAmount("E",124,new Decimal(0))
+    setBuyableAmount("E",125,new Decimal(0))
+    setBuyableAmount("E",126,new Decimal(0))
+    setBuyableAmount("E",127,new Decimal(0))
+    setBuyableAmount("E",128,new Decimal(0))
+    setBuyableAmount("E",130,new Decimal(0))
+    setBuyableAmount("E",131,new Decimal(0))
+    setBuyableAmount("E",132,new Decimal(0))
+    setBuyableAmount("E",133,new Decimal(0))
+    setBuyableAmount("E",134,new Decimal(0))
+    setBuyableAmount("E",136,new Decimal(0))
+    setBuyableAmount("E",137,new Decimal(0))
+    setBuyableAmount("E",138,new Decimal(0))
+    setBuyableAmount("E",139,new Decimal(0))
+    setBuyableAmount("E",140,new Decimal(0))
+    setBuyableAmount("E",143,new Decimal(0))
+    setBuyableAmount("E",144,new Decimal(0))
+    setBuyableAmount("E",145,new Decimal(0))
+    setBuyableAmount("E",146,new Decimal(0))
+    setBuyableAmount("E",147,new Decimal(0))
+    setBuyableAmount("E",149,new Decimal(0))
+    setBuyableAmount("E",150,new Decimal(0))
+    setBuyableAmount("E",151,new Decimal(0))
+    setBuyableAmount("E",152,new Decimal(0))
+    setBuyableAmount("E",153,new Decimal(0))
+    setBuyableAmount("E",155,new Decimal(0))
+    setBuyableAmount("E",156,new Decimal(0))
+    setBuyableAmount("E",157,new Decimal(0))
+    setBuyableAmount("E",158,new Decimal(0))
+    setBuyableAmount("E",159,new Decimal(0))
+    setBuyableAmount("E",162,new Decimal(0))
+    setBuyableAmount("E",163,new Decimal(0))
+    setBuyableAmount("E",164,new Decimal(0))
 
 
 }
