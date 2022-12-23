@@ -13,14 +13,14 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "Beta v0.0.3",
-	name: "初识英语",
+	num: "Beta v0.0.4",
+	name: "英语网格",
 }
 
 let changelog = `这里什么都没有<br>过段时间再来看看吧`
 		
 
-let winText = `恭喜你！你取得了该版本的毕业成绩！可喜可贺！<br>作者到达该版本毕业成绩的时间为2140年，你的成绩超越作者了吗？<br>作者：Lixiaohan From Tianjin Zili High School(Grade9,Class3)`
+let winText = `恭喜你！你取得了该版本的毕业成绩！可喜可贺！<br>作者到达该版本毕业成绩的时间为2160年，你的成绩超越作者了吗？<br>作者：Lixiaohan From Tianjin Zili High School(Grade9,Class3)`
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
 // (The ones here are examples, all official functions are already taken care of)
@@ -50,6 +50,7 @@ function getPointGen() {
 	if(player.C.totalGold.gte(1)) gain = gain.mul(tmp.C.effectGold1)
 	if(player.Eng.totalpp.gte(1)) gain = gain.mul(tmp.Eng.ppEffect)
 	if(player.C.total3.gte(1)) gain = gain.mul(tmp.C.effect3)
+	if(player.C.total4.gte(1)) gain = gain.mul(tmp.C.effect4)
 	return gain
 }
 
@@ -62,7 +63,7 @@ function addedPlayerData() { return {
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.E.bestPoints.gte(69)
+	return player.E.bestPoints.gte(119)
 }
 
 function calculateDay() {
@@ -98,7 +99,7 @@ function maxTickLength() {
 function fixOldSave(oldVersion){
 }
 var displayThings = [
-	"当前残局:中考最佳分数达到69分",
+	"当前残局:中考最佳分数达到119分",
 	"*目前游戏处于Beta版本，如遇到bug或者平衡问题可联系qq2119542935*",
 	function(){return formatDay()},
 	function() {if((player.points.gte(1444))&&(player.points.lt(8000))) return "如果你每个学分占据一个氢原子大小，那么它们足以制造"+format(player.points.div(new Decimal("1444"))) + "个葡萄糖分子。"},
