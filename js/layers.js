@@ -2601,7 +2601,9 @@ return hasMilestone("E",2)
     canAfford() { return player.E.inChinese.gte(1)&&player.E.inZuowen.lt(1)},
     buy() { 
     player.E.inChinese = new Decimal(0)  
-    player.E.points = player.E.points.add(player.E.Chinese)
+    player.E.points = player.E.Chinese
+    player.E.points = player.E.Chinese
+    player.E.points = player.E.Chinese
     if(hasMilestone("Eng",0)) player.E.inEnglish = new Decimal(1),player.E.EnglishTime = new Decimal(6000)
     },
     buyMax() {
