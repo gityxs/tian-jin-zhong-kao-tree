@@ -1,11 +1,7 @@
-@font-face {
-	font-family: 'Hanzipen SC';
-	src: url(hanzipen_sc_0.ttf);
-}
 * {
 	transition-duration: 0.5s;
 	text-align: center;
-	font-family: "Hanzipen SC",monospace;
+	font-family: "Courier New", "Courier Prime", "Lucida Console", monospace;
 	font-weight: bold;
 	table-align: center;
 	margin: auto;

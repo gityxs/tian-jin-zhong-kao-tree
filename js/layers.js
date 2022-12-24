@@ -80,7 +80,6 @@ addLayer("C", {
         if(hasUpgrade("Eng",31)) mult = mult.mul(upgradeEffect("Eng",31))
         if(hasUpgrade("Eng",41)) mult = mult.mul(upgradeEffect("Eng",41))
         if(hasUpgrade("Eng",51)) mult = mult.mul(upgradeEffect("Eng",51))
-        if (mult>1e50) mult = ((mult.div(1e50)).root(10)).mul(1e50)
         return mult
     },
     effectGold1()
@@ -2955,6 +2954,8 @@ return hasMilestone("E",2)
     player.E.inExam = new Decimal(0)
     player.E.completedEnglish = false
     if(tmp.E.Rank.lt(player.E.rank)) player.E.rank = tmp.E.Rank
+    if(player.E.points.gte(player.E.bestPoints)) player.E.bestPoints = player.E.points
+    if(player.E.points.gte(player.E.bestPoints)) player.E.bestPoints = player.E.points
     if(player.E.points.gte(player.E.bestPoints)) player.E.bestPoints = player.E.points
     player.E.completedExam = new Decimal(0)
     player.E.completedZuowen = new Decimal(0)
@@ -9203,6 +9204,9 @@ return freeze
             "blank",
             ["display-text",
             function() {return "距离"+player.E.year.add(1)+"年中考剩余天数: <h2 style='color:#FFFFFF;text-shadow:0px 0px 10px;'>"+ format(player.E.freeze)},
+            {}],
+            ["display-text",
+            function() {return "Tips:如果出现考试后立即交卷的问题，请试着刷新游戏！"},
             {}],
         ["bar", "NextCD"],
         ["infobox","introBox"],
@@ -17092,7 +17096,7 @@ upgrades:{
                                                                                                     currencyInternalName: "pp",
                                                                                                     currencyLayer: "Eng",
                                                                                                     tooltip(){return "<h4 style='color:#0070BA;text-shadow:0px 0px 10px;'>【语文知识 V】<h4><h4>效果：语文知识以显著降低的速度提升语文知识获取。<br>当前：x"+format(this.effect())},
-                                                                                                    unlocked(){return hasMilestone("Eng",7)},
+                                                                                                    unlocked(){return hasMilestone("Eng",9)},
                                                                                                     style() {  if (!hasUpgrade(this.layer,this.id)) return {'background-color': "#000000", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0070BA",'border-radius': "0px", height: "100px", width: "100px"}
                                                                                                             if (hasUpgrade(this.layer,this.id)) return {'background-color': "#0060A9", filter: "brightness("+new Decimal(100)+"%)", color: "white", 'border-color': "#0070BA",'border-radius': "0px", height: "100px", width: "100px"}},
                                                                                                     },
