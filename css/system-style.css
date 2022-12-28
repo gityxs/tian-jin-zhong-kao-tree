@@ -1,7 +1,12 @@
+@font-face {
+	font-family: 'CMDYSJ';
+	src: url(CMDYSJ.TTF);
+}
+
 * {
 	transition-duration: 0.5s;
 	text-align: center;
-	font-family: "Courier New", "Courier Prime", "Lucida Console", monospace;
+	font-family: "CMDYSJ","Courier New", "Courier Prime", "Lucida Console", monospace;
 	font-weight: bold;
 	table-align: center;
 	margin: auto;
