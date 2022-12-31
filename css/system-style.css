@@ -2,12 +2,11 @@
 	font-family: 'CMDYSJ';
 	src: url(CMDYSJ.TTF);
 }
-
 * {
 	transition-duration: 0.5s;
 	text-align: center;
-	font-family: "CMDYSJ","Courier New", "Courier Prime", "Lucida Console", monospace;
-	font-weight: bold;
+	font-family: "CMDYSJ", "Source Han Sans CN", "Courier Prime", "Lucida Console", monospace;
+	font-weight: 600;
 	table-align: center;
 	margin: auto;
 	-webkit-text-size-adjust: none;

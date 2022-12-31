@@ -12,9 +12,7 @@ addLayer("p", {
     color: "#4BDC13",                       // The color for this layer, which affects many elements.
     resource: "prestige points",            // The name of this layer's main prestige resource.
     row: 0,                                 // The row this layer is on (0 is the first row).
-nodeStyle() { return {
-			background: (player.mc.unlocked||canReset("mc"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, #c99a6b 0%, #706d6d 100%)":"#c99a6b"):"#bf8f8f",
-		}},
+
     baseResource: "points",                 // The name of the resource your prestige gain is based on.
     baseAmount() { return player.points },  // A function to return the current amount of baseResource.
 

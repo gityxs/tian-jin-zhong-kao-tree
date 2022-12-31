@@ -1,7 +1,7 @@
 let modInfo = {
 	name: "天津中考树",
 	id: "Ignotus",
-	author: "Jing Wenxuan as a student from Tianjin Zili High School,Class3,Grade9",
+	author: "??? as a student from Tianjin Zili High School,Class3,Grade9",
 	pointsName: "学分",
 	modFiles: ["layers.js", "tree.js"],
 
@@ -13,14 +13,17 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "Beta v0.0.4",
-	name: "英语网格",
+	num: "Beta v0.0.5.20230101",
+	name: "新年特辑",
 }
 
-let changelog = `这里什么都没有<br>过段时间再来看看吧`
+let changelog = `54m55q6K5oiQ5bCxMTLojrflvpfmlrnms5XvvJrlsIbkvaDnmoTmuLjmiI/lhoXlkI3lrZfmlLnmiJDkvZzogIXnmoTlkI3lrZfvvIzlubbkuJTlrozmiJDkuIDmrKHogIPor5XvvIHkuI7mraTlkIzml7bvvIznpZ7lpYfnmoTkuovmg4XlsIbkvJrlj5HnlJ/lk6Y=
+ 
+ 
+5Lit6ICD5qCRdjAuMC41LjIwMjMwMTAxCj0tPS095L2c6ICF5Zui6ZifPS09LT0K5L2c6ICFIzEKSWdub3R1c++8iOebruWJjeacrHFx6LSm5Y+35Y+35Li777yJCuWIq+WQje+8mkZhZGluZyBIdWFubWFv44CBVEdsNGFXRnZhR0Z144CB5oCA54m56L275piT55qE5Y675LiW5LqGLi4uLi4uCui6q+mrmO+8mjEwMTAxMDAwY20K5L2T6YeN77yaMTAxMDExa2cK5bm06b6E77yaMTExMeWygQrmgKfliKvvvJrkuI5IaWthcmnnm7jlj43vvIjkuI3opoHlho3otKjnlpHkuobvvIHvvIHvvIEK6Lqr5Lu977ya5aSp5rSl5biC6Ieq56uL5Lit5a2mOeW5tOe6pzEuOGUzMDjnj63lrabnlJ/vvIznj63lhoXljoblj7LmnIDpq5jmjpLlkI0xLzUw77yM5pyA5paw5o6S5ZCNMzgvNTDvvIzlubTnuqfljoblj7LmnIDpq5jmjpLlkI02Lzc2Me+8jOacgOaWsOaOkuWQjTU3NC83NjEK6L+Y5piv54mp55CG44CB5YyW5a2m6K++5Luj6KGo77yM5Ymv5a2m5Lmg5aeU5ZGY5LiA5p6afgrmmK/kuK3ogIPmoJHnmoTpobnnm67kuLvlgqwK5L2c6ICFIzIKYmlsaWJpbGlf6JCM5a2Q5Y+277yI6Z2e5Y+35Li7CuWIq+WQje+8muS4jeefpemBk+WRoi4uLi4K6Lqr6auY77yaMTAxMDEwMTFjbQrkvZPph43vvJoxMTAxMTFrZwrlubTpvoTvvJoxMDAwMOWygQrmgKfliKvvvJrkuI5UYWlyaXRzdeebuOWQjCjnnJ/nmoTlk6bvvIzop4bpopHph4zpnaLpnLLov4flo7Dpn7MpCui6q+S7ve+8mua1meaxn+S6uu+8jDnlubTnuqflrabnlJ/vvIzliankuIvnmoTkuI3nn6XpgZPkuoYuLi4K5Lyw6K6h5oiQ57up5LiN6ZSZ5ZGifgrkuK3ogIPmoJHpobnnm67lkIjkvZzkurrvvIxtY+W/oOivmueOqeWutiYm55qu6IKk44CB5Zyw5Zu+6K6+6K6h77yB5Li65Lit6ICD5qCR5o+Q5L6b6L+H5b6I5aSa5ri45oiP5py65Yi25oSP6KeB77yI5YyF5ous5a6e6KOF55qE5ZKM5bCG6KaB5a6e6KOF55qECj0tPS09RW5kPS09LT0K56Wd5aSn5a625paw5bm05b+r5LmQ5ZOm77yM5Y+m5aSW5pyf5b6F5Lit6ICD5qCR5LiD5Liq6ZqQ6JeP5oiQ5bCx5YWo6YOo6KKr56C06Kej55qE6YKj5LiA5Yi777yBCgoK`
 		
 
-let winText = `恭喜你！你取得了该版本的毕业成绩！可喜可贺！<br>作者到达该版本毕业成绩的时间为2160年，你的成绩超越作者了吗？<br>作者：Lixiaohan From Tianjin Zili High School(Grade9,Class3)`
+let winText = `恭喜你！你取得了该版本的毕业成绩！新年快乐！<br>作者到达该版本毕业成绩的时间为2222年，你的成绩超越作者了吗？<br>作者：??? From Tianjin Zili High School(Grade9,Class3)`
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
 // (The ones here are examples, all official functions are already taken care of)
@@ -51,6 +54,15 @@ function getPointGen() {
 	if(player.Eng.totalpp.gte(1)) gain = gain.mul(tmp.Eng.ppEffect)
 	if(player.C.total3.gte(1)) gain = gain.mul(tmp.C.effect3)
 	if(player.C.total4.gte(1)) gain = gain.mul(tmp.C.effect4)
+	if(player.Eng.points.gte(1)) gain = gain.mul(new Decimal(10).pow(player.Eng.points).min(1e10))
+if(hasUpgrade("Eng",17)) gain = gain.mul(upgradeEffect("Eng",17))
+if(hasUpgrade("Eng",27)) gain = gain.mul(upgradeEffect("Eng",27))
+if(hasUpgrade("Eng",37)) gain = gain.mul(upgradeEffect("Eng",37))
+if(hasUpgrade("Eng",47)) gain = gain.mul(upgradeEffect("Eng",47))
+if(hasUpgrade("Eng",57)) gain = gain.mul(upgradeEffect("Eng",57))
+if(hasUpgrade("Eng",67)) gain = gain.mul(upgradeEffect("Eng",67))
+if(hasUpgrade("Eng",77)) gain = gain.mul(upgradeEffect("Eng",77))
+if(hasUpgrade("Eng",87)) gain = gain.mul(upgradeEffect("Eng",87))
 	return gain
 }
 
@@ -63,7 +75,7 @@ function addedPlayerData() { return {
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.E.bestPoints.gte(119)
+	return player.E.bestPoints.gte(200)&&player.Eng.power.gte("1e1444")&&new Decimal(player.Eng.upgrades.length).gte(56)&&player.C.points.gte("1e60000")
 }
 
 function calculateDay() {
@@ -114,7 +126,7 @@ var displayThings = [
 	    function() {if((player.points.gte("1e24"))&&(player.points.lt("1.2e26"))) return "如果你每个学分占据一个氢原子大小，那么它们足以制造"+format(player.points.div(new Decimal("1e24"))) + "个米粒。"},
 	    function() {if((player.points.gte("1.2e26"))&&(player.points.lt("1e30"))) return "如果你每个学分占据一个氢原子大小，那么它们足以制造"+format(player.points.div(new Decimal("1.2e26"))) + "个1元硬币。"},
 	    function() {if((player.points.gte("1e30"))&&(player.points.lt("1.25e35"))) return "如果你每个学分占据一个氢原子大小，那么它们足以制造"+format(player.points.div(new Decimal("1e30"))) + "个篮球。"},
-	    function() {if((player.points.gte("1.25e35"))&&(player.points.lt("1e39"))) return "如果你每个学分占据一个氢原子大小，那么它们足以制造"+format(player.points.div(new Decimal("1.25e35"))) + "个作者。(按照作者体重43kg,密度1000g/m^3计算)"},
+	    function() {if((player.points.gte("1.25e35"))&&(player.points.lt("1e39"))) return "如果你每个学分占据一个氢原子大小，那么它们足以制造"+format(player.points.div(new Decimal("1.25e35"))) + "个作者。(按照作者体重43kg,密度1000kg/m^3计算)"},
 	    function() {if((player.points.gte("1e39"))&&(player.points.lt("8e42"))) return "如果你每个学分占据一个氢原子大小，那么它们足以制造"+format(player.points.div(new Decimal("1e39"))) + "架标准航天飞机。"},
 	    function() {if((player.points.gte("8e42"))&&(player.points.lt("1.6e47"))) return "如果你每个学分占据一个氢原子大小，那么它们足以制造"+format(player.points.div(new Decimal("8e42"))) + "个埃菲尔铁塔。"},
 	    function() {if((player.points.gte("1.6e47"))&&(player.points.lt("1.28e48"))) return "如果你每个学分占据一个氢原子大小，那么它们足以制造"+format(player.points.div(new Decimal("1.6e47"))) + "个珠穆朗玛峰。"},
@@ -142,5 +154,6 @@ var displayThings = [
 	    function() {if((player.points.add(1).log10().gte(120))&&(player.points.add(1).log10().lt(240))) return "如果你每秒写2个数字，不用科学计数法写下你的学分数目需要"+format(player.points.add(1).log10().div(2)) + "秒，在此期间，作者已经完成了"+format(player.points.add(1).log10().div(2).div(60).mul(32))+"次仰卧起坐。"},
 	    function() {if((player.points.add(1).log10().gte(240))&&(player.points.add(1).log10().lt(494))) return "如果你每秒写2个数字，不用科学计数法写下你的学分数目需要"+format(player.points.add(1).log10().div(2).div(60)) + "分钟，在此期间，作者已经完成了800m跑的"+format(player.points.add(1).log10().div(2).div(60).div(3.75).mul(100))+"%。"},
 	    function() {if((player.points.add(1).log10().gte(494))&&(player.points.add(1).log10().lt(14400))) return "如果你每秒写2个数字，不用科学计数法写下你的学分数目需要"+format(player.points.add(1).log10().div(2).div(60)) + "分钟。<br>在此期间，物化合场中考已经完成了"+format(player.points.add(1).log10().div(2).div(60).div(120).mul(100))+"%。"},
+	function() {if((player.points.add(1).log10().gte(14400))&&(player.points.add(1).log10().lt(518400))) return "如果你每秒写2个数字，不用科学计数法写下你的学分数目需要"+format(player.points.add(1).log10().div(2).div(3600)) + "小时。<br>在此期间，所有学科中考已经完成了"+format(player.points.add(1).log10().div(2).div(3600).div(72).mul(100))+"%。"},
 	
 ]
