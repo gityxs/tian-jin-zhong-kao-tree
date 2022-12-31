@@ -12053,7 +12053,7 @@ return "A<sup>"+player.A.Goals+"</sup>"
     titleStyle() { return {backgroundColor: "#FFFF00",color: "#000000"}},
 },
     },
-    tooltip(){return '已完成成就：' + player.A.Goals + ' / 21<h2>'},
+    tooltip(){return '已完成成就：' + player.A.Goals + '<h2>'},
     
     tabFormat:{
         "Awaken":{
